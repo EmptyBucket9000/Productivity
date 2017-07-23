@@ -1,0 +1,742 @@
+#: kivy 1.10.0
+#: import lib lib
+#: import main main
+
+####################################################################################
+## Books Screen
+####################################################################################
+
+<BookRow@BoxLayout>:
+    book_title: ''
+    primary_genre: ''
+    read_status: ''
+    book_id: ''
+    canvas.before:
+        Color:
+            rgba: 0.5, 0.5, 0.5, 1
+        Rectangle:
+            size: self.size
+            pos: self.pos
+    BoxLayout:
+        BoxLayout:
+            Label:
+                text: root.book_title
+            Label:
+                text: root.primary_genre
+            Label:
+                text: root.read_status
+        Button:
+            text: "View"
+            size_hint_x: 0.2
+            on_release: lib.Navigation.book_view_pressed(root.book_id, 'books')
+<BooksScreen>:
+    rv: rv
+    BoxLayout:
+        orientation: "vertical"
+        TopMenu:
+        BoxLayout:
+            padding: 10
+            spacing: 10
+            orientation: "vertical"
+            BoxLayout:
+                default_size_hint: 1, None
+                size_hint_y: dp(0.1)
+                spacing: dp(2)
+                canvas.before:
+                    Color:
+                        rgba: 0, 0, 0, 1
+                    Rectangle:
+                        size: self.size
+                        pos: self.pos
+                BoxLayout:
+                    Label:
+                        text: "Title"
+                    Label:
+                        text: "Genre"
+                    Label:
+                        text: "Read Status"
+                BoxLayout:
+                    size_hint_x: 0.2
+            RecycleView:
+                id: rv
+                scroll_type: ['bars', 'content']
+                scroll_wheel_distance: dp(114)
+                bar_width: dp(10)
+                viewclass: 'BookRow'
+                RecycleBoxLayout:
+                    default_size: None, dp(56)
+                    default_size_hint: 1, None
+                    size_hint_y: None
+                    height: self.minimum_height
+                    orientation: 'vertical'
+                    spacing: dp(2)
+        BoxLayout:
+            padding: 10
+            Button:
+                size_hint: 1, None
+                height: '50dp'
+#                on_release: root.dispatch('on_new_book')
+                on_release: lib.Navigation.page_nav(dest='new_book', orig='books', edit=False)
+                text: "Add New Book"
+            Button:
+                size_hint: 1, None
+                height: '50dp'
+                on_release: lib.Navigation.page_nav(dest='new_book_author', orig='books', edit=False)
+                text: "Add New Author"
+            Button:
+                size_hint: 1, None
+                height: '50dp'
+                on_release: lib.Navigation.page_nav(dest='new_book_publisher', orig='books', edit=False)
+                text: "Add New Publisher"
+
+####################################################################################
+## Book Screen
+####################################################################################
+
+<BookNotePopup>:
+    note_full: ''
+    note_title: ''
+    BoxLayout:
+        orientation: "vertical"
+        title: root.note_title
+        BoxLayout:
+            size_hint_y: 0.9
+            RstDocument:
+                text: root.note_full
+        BoxLayout:
+            size_hint_y: 0.1
+            Button:
+                text: "Close"
+                on_release: root.on_close()
+
+
+<BookInfo@Label>:
+    text_size: root.width, None
+    size: self.texture_size
+    padding: 10, 10
+    canvas.before:
+        Color:
+            rgba: 0.5, 0.5, 0.5, 1
+        Rectangle:
+            size: self.size
+            pos: self.pos
+<BookScreen>:
+    rv_note: rv_note
+    book_id: ''
+    book_title: ''
+    isbn: ''
+    year_published: ''
+    orig_year_published: ''
+    primary_genre: ''
+    secondary_genre: ''
+    read_status: ''
+    rating: ''
+    notes: ''
+    timestamp: ''
+    publisher: ''
+    cover_front: ''
+    cover_back: ''
+    author_list: ''
+    prev: ''
+    next: ''
+    btn_notes: ''
+
+    title: root.book_title
+    BoxLayout:
+        orientation: "vertical"
+        TopMenu:
+        BoxLayout:
+            orientation: "horizontal"
+            spacing: 10
+            padding: [0, 10, 0, 0]
+            BoxLayout:
+                padding: 10
+                spacing: 10
+                orientation: "vertical"
+                size_hint_x: None
+                width: 544
+                canvas.before:
+                    Color:
+                        rgba: 0.2, 0.2, 0.2, 1
+                    Rectangle:
+                        size: self.size
+                        pos: self.pos
+                BoxLayout:
+                    size_hint_y: 0.1
+                    spacing: 10
+                    Button:
+                        size_hint_x: None
+                        width: 97
+                        text: "Prev"
+                        on_release: lib.Navigation.book_view_pressed(root.prev, 'book')
+                    Button:
+                        size_hint_x: None
+                        width: 97
+                        text: "Next"
+                        on_release: lib.Navigation.book_view_pressed(root.next, 'book')
+                    Label:
+                        text: root.book_title
+                        font_size: sp(20)
+                        height: 35
+                        halign: 'center'
+                        valign: 'center'
+                        underline: True
+
+                BoxLayout:
+                    size_hint_y: None
+                    spacing: 10
+                    height: 324
+                    BoxLayout:
+                        size_hint: None, None
+                        size: 216, 324
+                        canvas:
+                            Rectangle:
+                                pos: self.pos
+                                size: 216, 324
+                                source: root.cover_front
+                    BoxLayout:
+                        spacing: 3
+                        size_hint: None, None
+                        size: 300, 324
+                        canvas:
+                            Color:
+                                rgba: 0.5, 0.5, 0.5, 1
+                        orientation: "vertical"
+                        BookInfo:
+                            text: "Author: " + root.author_list
+                        BookInfo:
+                            text: "Your Rating: " + root.rating + "/10"
+                        BookInfo:
+                            text: "Status: " + root.read_status
+                        BookInfo:
+                            text: " ISBN: " + root.isbn
+                        BookInfo:
+                            text: "Published: " + root.year_published + " / " + root.orig_year_published
+                        BookInfo:
+                            text: "Publisher: " + root.publisher
+                        BookInfo:
+                            text: "Genre(s): " + root.primary_genre + " / " + root.secondary_genre
+                ScrollView:
+                    BoxLayout:
+                        size_hint: None, None
+                        size: self.parent.width - 10, self.minimum_height
+                        Label:
+                            text: root.notes
+                            text_size: self.width, None
+                            size_hint: 1, None
+                            size: self.texture_size
+
+            BoxLayout:
+                orientation: "vertical"
+                BoxLayout:
+                    size_hint_y: 0.9
+                    RecycleView:
+                        id: rv_note
+                        scroll_type: ['bars', 'content']
+                        scroll_wheel_distance: dp(114)
+                        bar_width: dp(50)
+                        viewclass: 'BookNoteRow'
+                        RecycleBoxLayout:
+                            default_size_hint: 1, None
+                            default_size: None, dp(250)
+                            size_hint: None, None
+                            width: self.parent.width - 50
+                            height: self.minimum_height
+                            orientation: 'vertical'
+                            spacing: dp(10)
+
+                BoxLayout:
+                    padding: [0,10,10,10]
+                    size_hint_y: 0.1
+                    Button:
+                        text: "Add Note"
+                        on_release: lib.Navigation.page_nav(dest='new_book_note', orig='book', edit=False)
+                    Button:
+                        text: "Edit Details"
+                        on_release: lib.Navigation.edit_book_pressed(root.book_id, 'book')
+                    Button:
+                        text: "Delete Book"
+                        on_release: root.confirm_book_delete(root.book_id)
+<BookNoteRow@BoxLayout>:
+    note_id: ''
+    note_title: ''
+    note_excerpt: ''
+    note_full: ''
+    btn_full_notes: ''
+    orientation: "vertical"
+    BoxLayout:
+        orientation: "vertical"
+        spacing: 10
+        padding: [0,0,10,0]
+        size_hint_y: 1
+        BoxLayout:
+            size_hint_y: 0.2
+            spacing: 10
+            BoxLayout:
+                canvas.before:
+                    Color:
+                        rgba: 0.5, 0.5, 0.5, 1
+                    Rectangle:
+                        size: self.size
+                        pos: self.pos
+                Label:
+                    text: root.note_title
+            BoxLayout:
+                size_hint_x: 0.2
+                Button:
+                    text: "Delete Note"
+                    on_release: App.books.BookScreen.confirm_book_note_delete(root.note_id)
+        BoxLayout:
+            spacing: 10
+            RstDocument:
+                text: root.note_excerpt
+            BoxLayout:
+                orientation: "vertical"
+                size_hint_x: 0.2
+                Button:
+                    text: "Edit Note"
+                    on_release: lib.Navigation.edit_book_note_pressed(root.note_id, 'book')
+                Button:
+                    text: root.btn_full_notes
+                    on_release: lib.Navigation.book_note_pressed(root.note_id)
+
+<DeleteBookNoteConfirmationPopup>:
+    delete_note_id: ''
+    note_title: ''
+    title: root.note_title
+    BoxLayout:
+        Button:
+            text: "Yes, delete this note."
+            on_release: root.on_confirm()
+        Button:
+            text: "No, don't delete this note."
+            on_release: root.on_close()
+
+<DeleteBookConfirmationPopup>:
+    delete_book_id: ''
+    book_title: ''
+    title: root.book_title
+    BoxLayout:
+        Button:
+            text: "Yes, delete this book."
+            on_release: root.on_confirm()
+        Button:
+            text: "No, don't delete this book."
+            on_release: root.on_close()
+
+####################################################################################
+## New Book Screen
+####################################################################################
+
+<MultiSelectOption@ToggleButton>:
+    size_hint: 1, None
+    height: '30dp'
+
+<NewBookFormRow@BoxLayout>:
+    size_hint_y: None
+    height: '30dp'
+
+<NewBookFormLabel@Label>:
+    size_hint_x: 0.3
+    text_size: self.size
+    halign: 'right'
+    valign: 'middle'
+    padding_x: 10
+
+<NewBookScreen>:
+    prev_page: ''
+    book_author_spinner_list: ''
+    book_publisher_spinner_list: ''
+    front_cover_input: front_cover_input
+    back_cover_input: back_cover_input
+    new_book_insert_status: new_book_insert_status
+    new_book_insert_status_box: new_book_insert_status_box
+    r: '0.5'
+    BoxLayout:
+        orientation: "vertical"
+        TopMenu:
+        BoxLayout:
+            id: new_book_insert_status_box
+            canvas.before:
+                Color:
+                    rgba: root.r, 0.5, 0.5, 1
+                Rectangle:
+                    size: self.size
+                    pos: self.pos
+            size_hint_y: None
+            height: '40dp'
+            Label:
+                id: new_book_insert_status
+                text: ""
+        BoxLayout:
+            padding: [10, 0, 10, 10]
+            orientation: "vertical"
+            NewBookFormRow:
+                Label:
+                    size_hint_x: 0.1
+                    text_size: self.size
+                    halign: 'center'
+                    valign: 'middle'
+                    text: "Textbook?"
+                NewBookFormLabel:
+                    size_hint_x: 0.2
+                    text: "Title*"
+                TextInput:
+                    id: new_book_title
+                    text: root.data['book_title'] if 'book_title' in root.data else ''
+                    multiline: False
+                    input_filter: (lambda text, from_undo: text[:50 - len(self.text)])
+                    on_text: root.data['book_title'] = self.text
+            NewBookFormRow:
+                BoxLayout:
+                    size_hint_x: 0.3
+                    BoxLayout:
+                        size_hint_x: 0.1
+                        CheckBox:
+                            canvas.before:
+                                Color:
+                                    rgba: 1, 1, 1, 1
+                                Rectangle:
+                                    pos:self.center_x-8, self.center_y-8
+                                    size:[16,16]
+                            on_active: root.data['textbook'] = self.active
+                    NewBookFormLabel:
+                        size_hint_x: 0.2
+                        text: "Author(s)"
+                BoxLayout:
+                    MultiSelectSpinner:
+                        id: new_book_author
+                        text: root.data['author'] if 'author' in root.data else "Select author(s)"
+                        values: root.book_author_spinner_list
+                        on_text: root.data['author'] = self.text
+                    Button:
+                        size_hint_x: 0.2
+                        text: "Add New Author"
+                        on_release: lib.Navigation.page_nav(dest='new_book_author', orig='new_book', edit=False)
+            NewBookFormRow:
+                BoxLayout:
+                    size_hint_x: 0.3
+                    NewBookFormLabel:
+                        text: "Publisher"
+                BoxLayout:
+                    MultiSelectSpinner:
+                        id: new_book_publisher
+                        text: root.data['publisher'] if 'publisher' in root.data else "Select publisher"
+                        values: root.book_publisher_spinner_list
+                        on_text: root.data['publisher'] = self.text
+                    Button:
+                        size_hint_x: 0.2
+                        text: "Add New Publisher"
+                        on_release: lib.Navigation.page_nav(dest='new_book_publisher', orig='new_book', edit=False)
+            NewBookFormRow:
+                NewBookFormLabel:
+                    text: "ISBN"
+                TextInput:
+                    id: new_book_isbn
+                    text: root.data['isbn'] if 'isbn' in root.data else ''
+                    multiline: False
+                    input_filter: (lambda text, from_undo: text[:17 - len(self.text)])
+                    on_text: root.data['isbn'] = self.text
+            NewBookFormRow:
+                NewBookFormLabel:
+                    text: "Year Published"
+                TextInput:
+                    id: new_book_year_published
+                    text: root.data['year_published'] if 'year_published' in root.data else ''
+                    multiline: False
+                    input_filter: (lambda text, from_undo: text[:4 - len(self.text)])
+                    on_text: root.data['year_published'] = self.text
+            NewBookFormRow:
+                NewBookFormLabel:
+                    text: "Original Year Published"
+                TextInput:
+                    id: new_book_original_year_published
+                    text: root.data['original_year_published'] if 'original_year_published' in root.data else ''
+                    multiline: False
+                    input_filter: (lambda text, from_undo: text[:4 - len(self.text)])
+                    on_text: root.data['original_year_published'] = self.text
+            NewBookFormRow:
+                NewBookFormLabel:
+                    text: "Primary Genre*"
+                TextInput:
+                    id: new_book_primary_genre
+                    text: root.data['primary_genre'] if 'primary_genre' in root.data else ''
+                    multiline: False
+                    input_filter: (lambda text, from_undo: text[:30 - len(self.text)])
+                    on_text: root.data['primary_genre'] = self.text
+            NewBookFormRow:
+                NewBookFormLabel:
+                    text: "Secondary Genre"
+                TextInput:
+                    id: new_book_secondary_genre
+                    text: root.data['secondary_genre'] if 'secondary_genre' in root.data else ''
+                    multiline: False
+                    input_filter: (lambda text, from_undo: text[:30 - len(self.text)])
+                    on_text: root.data['secondary_genre'] = self.text
+            NewBookFormRow:
+                NewBookFormLabel:
+                    text: "Read Status"
+                TextInput:
+                    id: new_book_read_status
+                    text: root.data['read_status'] if 'read_status' in root.data else ''
+                    multiline: False
+                    input_filter: (lambda text, from_undo: text[:30 - len(self.text)])
+                    on_text: root.data['read_status'] = self.text
+            NewBookFormRow:
+                NewBookFormLabel:
+                    text: "Rating"
+                TextInput:
+                    id: new_book_rating
+                    text: root.data['rating'] if 'rating' in root.data else ''
+                    multiline: False
+                    input_filter: (lambda text, from_undo: text[:30 - len(self.text)])
+                    on_text: root.data['rating'] = self.text
+            NewBookFormRow:
+                NewBookFormLabel:
+                    text: "Front Cover (ratio: 1:1.5)"
+                BoxLayout:
+                    TextInput:
+                        id: front_cover_input
+                        text: root.data['cover_front'] if 'cover_front' in root.data else ''
+                        on_text: root.data['cover_front'] = self.text
+                    Button:
+                        size_hint_x: 0.2
+                        text: "Select File..."
+                        on_release: root.show_load_front()
+            NewBookFormRow:
+                NewBookFormLabel:
+                    text: "Back Cover (ratio: 1:1.5)"
+                BoxLayout:
+                    TextInput:
+                        id: back_cover_input
+                        text: root.data['cover_back'] if 'cover_back' in root.data else ''
+                        on_text: root.data['cover_back'] = self.text
+                    Button:
+                        size_hint_x: 0.2
+                        text: "Select File..."
+                        on_release: root.show_load_back()
+            BoxLayout:
+                Button:
+                    size_hint_x: 0.2
+                    text: "Cancel"
+                    on_release: lib.Navigation.page_nav(dest='prev_page', orig='books', edit=False)
+                BoxLayout:
+                    orientation: "vertical"
+                    size_hint_x: 1.5
+                    Label:
+                        size_hint_y: None
+                        height: '30dp'
+                        text: "Quick Note (1000 char max)"
+                    TextInput:
+                        id: notes
+                        text: root.data['notes'] if 'notes' in root.data else ''
+                        multiline: True
+                        input_filter: (lambda text, from_undo: text[:1000 - len(self.text)])
+                        on_text: root.data['notes'] = self.text
+
+                Button:
+                    text: "Submit"
+                    on_release: root.dispatch('on_submit', root.data)
+
+<LoadDialog>:
+    BoxLayout:
+        size: root.size
+        pos: root.pos
+        orientation: "vertical"
+        FileChooserListView:
+            id: filechooser
+
+        BoxLayout:
+            size_hint_y: None
+            height: 30
+            Button:
+                text: "Cancel"
+                on_release: root.cancel()
+
+            Button:
+                text: "Load"
+                on_release: root.load(filechooser.path, filechooser.selection)
+
+####################################################################################
+## New Book Note Screen
+####################################################################################
+
+<NewBookNoteScreen>:
+    BoxLayout:
+        orientation: "vertical"
+        BoxLayout:
+            size_hint_y: None
+            height: '30dp'
+            BoxLayout:
+                size_hint_x: None
+                width: '350dp'
+                Label:
+                    text: "Title*"
+            BoxLayout:
+                TextInput:
+                    id: new_tbn_note_title
+                    multiline: False
+                    text: root.data['tbn_note_title'] if 'tbn_note_title' in root.data else ''
+                    on_text: root.data['tbn_note_title'] = self.text
+        BoxLayout:
+            BoxLayout:
+                orientation: "vertical"
+                size_hint_x: None
+                width: '350dp'
+                BoxLayout:
+                    size_hint_y: None
+                    height: '30dp'
+                    Label:
+                        text: "Excerpt (1000 char max)"
+                BoxLayout:
+                    orientation: "vertical"
+                    TextInput:
+                        id: new_tbn_note_excerpt
+                        text: root.data['tbn_note_excerpt'] if 'tbn_note_excerpt' in root.data else ''
+                        input_filter: (lambda text, from_undo: text[:1000 - len(self.text)])
+                        on_text: root.data['tbn_note_excerpt'] = self.text
+                    RstDocument:
+                        text: new_tbn_note_excerpt.text
+                        show_errors: True
+            BoxLayout:
+                orientation: "vertical"
+                BoxLayout:
+                    size_hint_y: None
+                    height: '30dp'
+                    Label:
+                        text: "Full Notes"
+                BoxLayout:
+                    TextInput:
+                        id: new_tbn_note_full
+                        text: root.data['tbn_note_full'] if 'tbn_note_full' in root.data else ''
+                        on_text: root.data['tbn_note_full'] = self.text
+                    RstDocument:
+                        text: new_tbn_note_full.text
+                        show_errors: True
+        BoxLayout:
+            size_hint_y: None
+            height: '30dp'
+            Button:
+                text: "Cancel"
+                on_release: root.confirm_cancel_book_note()
+            Button:
+                text: "Submit"
+                on_release: root.dispatch('on_submit', root.data)
+
+<CancelBookNoteConfirmationPopup>:
+    title: "Are you sure you want to cancel?"
+    BoxLayout:
+        Button:
+            text: "Yes, cancel and lose any entered data."
+            on_release: root.on_confirm()
+        Button:
+            text: "No, return to note edit."
+            on_release: root.on_cancel()
+
+####################################################################################
+## New Author Screen
+####################################################################################
+
+<NewAuthorRow@BoxLayout>:
+    size_hint_y: None
+    height: '50dp'
+
+<NewAuthorLabel@Label>:
+    size_hint_x: 0.3
+    text_size: self.size
+    valign: 'middle'
+    halign: 'right'
+    padding_x: 10
+
+<NewAuthorTextInput@TextInput>:
+    multiline: False
+    font_size: 18
+    input_filter: (lambda text, from_undo: text[:50 - len(self.text)])
+    padding_y: ( self.height - self.line_height ) / 2
+
+<NewAuthorScreen>:
+    BoxLayout:
+        orientation: "vertical"
+        Label:
+            size_hint_y: 0.2
+            text_size: self.text_size
+            valign: 'middle'
+            font_size: 24
+            text: "New/Edit Author"
+        BoxLayout:
+            size_hint_y: 0.3
+            padding: 10
+            orientation: "vertical"
+            NewAuthorRow:
+                NewAuthorLabel:
+                    text: "First Name"
+                NewAuthorTextInput:
+                    id: new_author_first
+                    on_text: root.data['author_first'] = self.text
+            NewAuthorRow:
+                NewAuthorLabel:
+                    text: "Middle Name"
+                NewAuthorTextInput:
+                    id: new_author_middle
+                    on_text: root.data['author_middle'] = self.text
+            NewAuthorRow:
+                NewAuthorLabel:
+                    text: "Last Name"
+                NewAuthorTextInput:
+                    id: new_author_last
+                    on_text: root.data['author_last'] = self.text
+        BoxLayout:
+            Button:
+                text: "Cancel"
+                on_release: root.manager.current = root.data['prev_page'] if 'prev_page' in root.data else 'books'
+            Button:
+                text: "Submit"
+                on_release: root.dispatch('on_submit', root.data)
+
+####################################################################################
+## New Publisher Screen
+####################################################################################
+
+<NewPublisherRow@BoxLayout>:
+    size_hint_y: None
+    height: '50dp'
+
+<NewPublisherLabel@Label>:
+    size_hint_x: 0.3
+    text_size: self.size
+    valign: 'middle'
+    halign: 'right'
+    padding_x: 10
+
+<NewPublisherTextInput@TextInput>:
+    multiline: False
+    font_size: 18
+    input_filter: (lambda text, from_undo: text[:50 - len(self.text)])
+    padding_y: ( self.height - self.line_height ) / 2
+
+<NewPublisherScreen>:
+    BoxLayout:
+        orientation: "vertical"
+        Label:
+            size_hint_y: 0.2
+            text_size: self.text_size
+            valign: 'middle'
+            font_size: 24
+            text: "New/Edit Publisher"
+        BoxLayout:
+            size_hint_y: 0.3
+            padding: 10
+            orientation: "vertical"
+            NewPublisherRow:
+                NewPublisherLabel:
+                    text: "Publisher Name"
+                NewPublisherTextInput:
+                    id: new_publisher_name
+                    on_text: root.data['publisher_name'] = self.text
+        BoxLayout:
+            Button:
+                text: "Cancel"
+                on_release: root.manager.current = root.data['prev_page'] if 'prev_page' in root.data else 'books'
+            Button:
+                text: "Submit"
+                on_release: root.dispatch('on_submit', root.data)

@@ -1,0 +1,178 @@
+#: kivy 1.10.0
+#: import main main
+#: import lib lib
+#: include media/Books.kv
+#: include learning/FlashCards.kv
+
+#ScreenManager:
+#    id: screen_manager
+#    HomeScreen:
+#    BooksScreen:
+#    BookScreen:
+#    EmptyScreen:
+#    NewBookScreen:
+
+####################################################################################
+## Top Menu
+####################################################################################
+
+<TopMenuButton@Button>:
+#    background_color: (1, 1, 1, 0)
+#    size_hint: None, None
+#    size: (64, 64) if self.state == "normal" else (64, 64)
+
+<TopMenu@BoxLayout>:
+    # Menu icons by Icon Pond at Flaticon
+    orientation: "horizontal"
+    canvas.before:
+        Color:
+            rgba: 0, 0, 0, 1
+        Rectangle:
+            size: self.size
+            pos: self.pos
+    size_hint_y: None
+    height: 84
+    spacing: 10
+    padding: 10
+    TopMenuButton:
+        size_hint_x: None
+        width: self.height
+        text: "Back"
+        on_release: lib.Navigation.page_nav(dest='prev_page')
+    TopMenuButton:
+        on_release: lib.Navigation.page_nav(dest='home', edit=False)
+        Image:
+            source: "Assets/Icons/house_med.png"
+            pos: self.parent.center_x - self.parent.width/2, self.parent.center_y - self.parent.height/2
+            size: self.parent.size
+    TopMenuButton:
+        on_release: lib.Navigation.page_nav(dest='books', edit=False)
+        Image:
+            source: "Assets/Icons/library.png"
+            pos: self.parent.center_x - self.parent.width/2, self.parent.center_y - self.parent.height/2
+            size: self.parent.size
+    TopMenuButton:
+        on_release: lib.Navigation.page_nav(dest='flash_cards', edit=False)
+        Image:
+            source: "Assets/Icons/notebook_med.png"
+            pos: self.parent.center_x - self.parent.width/2, self.parent.center_y - self.parent.height/2
+            size: self.parent.size
+    TopMenuButton:
+        size_hint_x: None
+        width: self.height
+        text: "Help"
+        on_release: lib.Navigation.page_nav(dest='help', orig='home', edit=False)
+
+####################################################################################
+## Home Screen
+####################################################################################
+
+<HomeScreenSectionButton@Button>:
+    size_hint_y: None
+    height: '30dp'
+    background_color: (0, 1, 1, 1)
+
+<HomeScreenButton@Button>:
+    text_size: self.size
+    valign: 'middle'
+    halign: 'center'
+
+<HomeScreen>:
+    BoxLayout:
+        spacing: 5
+        orientation: "vertical"
+        TopMenu:
+        GridLayout:
+            spacing: 5
+            cols: 2
+            rows: 1
+            BoxLayout:
+                orientation: "vertical"
+                HomeScreenSectionButton:
+                    text: 'Media'
+                GridLayout:
+                    cols: 2
+                    rows: 2
+                    HomeScreenButton:
+                        text: 'Books'
+                        on_release: lib.Navigation.page_nav(dest='books', orig='home', edit=False)
+                    HomeScreenButton:
+                        text: 'Music'
+                    HomeScreenButton:
+                        text: 'Movies'
+                    HomeScreenButton:
+                        text: 'Audio Books'
+            BoxLayout:
+                spacing: 5
+                BoxLayout:
+                    orientation: "vertical"
+                    HomeScreenSectionButton:
+                        text: 'Programming'
+                    GridLayout:
+                        cols: 1
+                        rows: 1
+                        HomeScreenButton:
+                            text: 'Python'
+                BoxLayout:
+                    orientation: "vertical"
+                    HomeScreenSectionButton:
+                        text: 'Food'
+                    GridLayout:
+                        cols: 1
+                        rows: 2
+                        HomeScreenButton:
+                            text: 'Kitchen\nLaboratory'
+                        HomeScreenButton:
+                            text: 'Recipes'
+        GridLayout:
+            spacing: 5
+            cols: 2
+            rows: 1
+            BoxLayout:
+                orientation: "vertical"
+                HomeScreenSectionButton:
+                    text: 'Learning'
+                GridLayout:
+                    cols: 2
+                    rows: 3
+                    HomeScreenButton:
+                        text: 'Flash Cards'
+                        on_release: lib.Navigation.page_nav(dest='flash_cards', orig='home', edit=False)
+                    HomeScreenButton:
+                        text: 'Text Books'
+                    HomeScreenButton:
+                        text: 'Resources'
+                    HomeScreenButton:
+                        text: 'Notes'
+                    HomeScreenButton:
+                        text: 'Publications'
+                    HomeScreenButton:
+            BoxLayout:
+                orientation: "vertical"
+                HomeScreenSectionButton:
+                    text: 'Personal'
+                GridLayout:
+                    cols: 2
+                    rows: 2
+                    HomeScreenButton:
+                        text: 'Journal'
+                    HomeScreenButton:
+                        text: 'Photos'
+                    HomeScreenButton:
+                        text: 'Contacts'
+                    HomeScreenButton:
+                        text: 'To-Do'
+
+####################################################################################
+## Help Screen
+####################################################################################
+
+<HelpScreen>:
+    BoxLayout:
+        orientation: "vertical"
+        TopMenu:
+        BoxLayout:
+            Label:
+                text: "Help will go here."
+
+<EmptyScreen>:

@@ -1,0 +1,333 @@
+#: kivy 1.10.0
+#: import lib lib
+#: import main main
+
+####################################################################################
+## Flash Cards Screen
+####################################################################################
+
+<FlashCardDeckRow@BoxLayout>:
+    fc_deck_id: ''
+    fc_deck_name: ''
+    fc_deck_excerpt: ''
+    canvas.before:
+        Color:
+            rgba: 0.5, 0.5, 0.5, 1
+        Rectangle:
+            size: self.size
+            pos: self.pos
+    BoxLayout:
+        BoxLayout:
+            orientation: "vertical"
+            Label:
+                size_hint_y: 0.3
+                text: root.fc_deck_name
+            RstDocument:
+                text: root.fc_deck_excerpt
+        BoxLayout:
+            size_hint_x: 0.15
+            orientation: "vertical"
+            Button:
+                text: "Study"
+    #            on_release: lib.Navigation.page_nav(dest='flash_card_deck', orig='flash_cards', fc_deck_id=root.fc_deck_id)
+            Button:
+                size_hint_y: 0.7
+                text: "View"
+                on_release: lib.Navigation.page_nav(dest='flash_card_deck', orig='flash_cards', fc_deck_id=root.fc_deck_id)
+        BoxLayout:
+            size_hint_x: None
+            width: dp(30)
+            Button:
+                text: "D\nE\nL"
+                on_release: lib.Navigation.confirm_flash_card_deck_delete(root.fc_deck_id)
+
+<FlashCardsScreen>:
+    fc_deck_rv: fc_deck_rv
+    BoxLayout:
+        orientation: "vertical"
+        TopMenu:
+        BoxLayout:
+            RecycleView:
+                id: fc_deck_rv
+                scroll_type: ['bars', 'content']
+                scroll_wheel_distance: dp(114)
+                bar_width: dp(10)
+                viewclass: 'FlashCardDeckRow'
+                RecycleBoxLayout:
+                    padding: [10, 0, 10, 0]
+                    default_size: None, dp(150)
+                    default_size_hint: 1, None
+                    size_hint_y: None
+                    height: self.minimum_height
+                    orientation: 'vertical'
+                    spacing: dp(2)
+        BoxLayout:
+            size_hint_y: 0.1
+            Button:
+                text: "Add New Flash Card"
+                on_release: lib.Navigation.page_nav(dest='new_flash_card', orig='flash_cards', edit=False)
+            Button:
+                text: "Add New Deck"
+                on_release: lib.Navigation.page_nav(dest='new_flash_card_deck', orig='flash_cards', edit=False)
+
+<NewFlashCardScreen>:
+    BoxLayout:
+        orientation: "vertical"
+        BoxLayout:
+            size_hint_y: 0.1
+            Label:
+                size_hint_x: 0.2
+                text: "Card Title"
+                text_size: self.text_size
+                valign: 'middle'
+            TextInput:
+                id: new_fc_title
+                multiline: False
+                padding_y: [self.height / 2.0 - (self.line_height / 2.0) * len(self._lines), 0]
+                text: root.data['fc_title'] if 'fc_title' in root.data else ""
+                on_text: root.data['fc_title'] = self.text
+            Label:
+                size_hint_x: 0.2
+                text: "Difficulty"
+                text_size: self.text_size
+                valign: 'middle'
+        BoxLayout:
+            size_hint_y: 0.1
+            Label:
+                size_hint_x: 0.2
+                text: "Card Tag(s)"
+                text_size: self.text_size
+                valign: 'middle'
+            BoxLayout:
+                MultiSelectSpinner:
+                    id: new_fc_tag
+                    text: root.data['fc_tags'] if 'fc_tags' in root.data else "Select tag(s)"
+                    values: root.fc_tag_spinner_list
+                    on_text: root.data['fc_tags'] = self.text
+                Button:
+                    size_hint_x: 0.3
+                    text: "New Tag"
+                    on_release: lib.Navigation.page_nav(dest='new_flash_card_tag', orig='new_flash_card', edit=False)
+            BoxLayout:
+                size_hint_x: 0.2
+                TextInput:
+                    padding_y: [self.height / 2.0 - (self.line_height / 2.0) * len(self._lines), 0]
+                    id: new_fc_difficulty
+                    text: root.data['fc_difficulty'] if 'fc_difficulty' in root.data else "0"
+                    on_text: root.data['fc_difficulty'] = self.text
+        BoxLayout:
+            size_hint_y: 0.1
+            Label:
+                size_hint_x: 0.2
+                text: "Card Deck(s)"
+                text_size: self.text_size
+                valign: 'middle'
+            BoxLayout:
+                MultiSelectSpinner:
+                    id: new_fc_deck
+                    text: root.data['fc_decks'] if 'fc_decks' in root.data else "Select deck(s)"
+                    values: root.fc_deck_spinner_list
+                    on_text: root.data['fc_decks'] = self.text
+                Button:
+                    size_hint_x: 0.3
+                    text: "New Deck"
+                    on_release: lib.Navigation.page_nav(dest='new_flash_card_deck', orig='new_flash_card', edit=False)
+            BoxLayout:
+                size_hint_x: 0.2
+        BoxLayout:
+            orientation: "vertical"
+            Label:
+                size_hint_y: 0.1
+                text: "Card Front"
+            BoxLayout:
+                TextInput:
+                    id: new_fc_front
+                    multiline: True
+                    text: root.data['fc_front'] if 'fc_front' in root.data else ""
+                    on_text: root.data['fc_front'] = self.text
+                RstDocument:
+                    text: new_fc_front.text
+                    show_errors: True
+        BoxLayout:
+            orientation: "vertical"
+            Label:
+                size_hint_y: 0.1
+                text: "Card Back"
+            BoxLayout:
+                TextInput:
+                    id: new_fc_back
+                    multiline: True
+                    text: root.data['fc_back'] if 'fc_back' in root.data else ""
+                    on_text: root.data['fc_back'] = self.text
+                RstDocument:
+                    text: new_fc_back.text
+                    show_errors: True
+        BoxLayout:
+            size_hint_y: 0.2
+            Button:
+                text: "Cancel"
+                on_release: lib.Navigation.page_nav(dest='prev_page', orig='new_flash_card', edit=False)
+            Button:
+                text: "Submit"
+                on_release: root.dispatch('on_submit', root.data)
+
+<NewFlashCardTagScreen>:
+    title: "New/Edit Flash Card Tag"
+    BoxLayout:
+        orientation: "vertical"
+        BoxLayout:
+            size_hint_y: 0.1
+            padding: 10
+            orientation: "vertical"
+            BoxLayout:
+                Label:
+                    size_hint_x: 0.3
+                    text: "Tag Name"
+                TextInput:
+                    padding_y: [self.height / 2.0 - (self.line_height / 2.0) * len(self._lines), 0]
+                    id: new_author_first
+                    on_text: root.data['fc_tag_name'] = self.text
+        BoxLayout:
+            TextInput:
+                id: new_fc_tag_excerpt
+                multiline: True
+                text: root.data['fc_tag_excerpt'] if 'fc_tag_excerpt' in root.data else ""
+                on_text: root.data['fc_tag_excerpt'] = self.text
+            RstDocument:
+                text: new_fc_tag_excerpt.text
+                show_errors: True
+        BoxLayout:
+            size_hint_y: 0.2
+            Button:
+                text: "Cancel"
+                on_release: root.manager.current = root.data['prev_page'] if 'prev_page' in root.data else 'new_flash_card'
+            Button:
+                text: "Submit"
+                on_release: root.dispatch('on_submit', root.data)
+
+<FlashCardDeckCardRow@BoxLayout>:
+    fc_id: ''
+    fc_title: ''
+    fc_deck_id: ''
+    canvas.before:
+        Color:
+            rgba: 0.5, 0.5, 0.5, 1
+        Rectangle:
+            size: self.size
+            pos: self.pos
+    BoxLayout:
+        Label:
+            text: root.fc_title
+        Button:
+            size_hint_x: 0.2
+            text_size: self.size
+            halign: 'center'
+            valign: 'middle'
+            text: "Remove\nfrom Deck"
+            on_release: lib.Queries.remove_fc_from_deck(root.fc_id)
+        Button:
+            size_hint_x: 0.2
+            text: "View/Edit"
+            on_release: lib.Navigation.page_nav(dest='new_flash_card', orig='flash_card_deck', edit=True, fc_id=root.fc_id)
+        Button:
+            size_hint_x: 0.1
+            text: "D\nE\nL"
+            on_release: lib.Navigation.confirm_flash_card_delete(root.fc_id)
+
+<FlashCardDeckScreen>:
+    fc_rv: fc_rv
+    BoxLayout:
+        orientation: "vertical"
+        TopMenu:
+        BoxLayout:
+            BoxLayout:
+                orientation: "vertical"
+                RecycleView:
+                    id: fc_rv
+                    scroll_type: ['bars', 'content']
+                    scroll_wheel_distance: dp(114)
+                    bar_width: dp(10)
+                    viewclass: 'FlashCardDeckCardRow'
+                    RecycleBoxLayout:
+                        padding: [10, 0, 10, 0]
+                        default_size: None, dp(50)
+                        default_size_hint: 1, None
+                        size_hint_y: None
+                        height: self.minimum_height
+                        orientation: 'vertical'
+                        spacing: dp(2)
+            BoxLayout:
+                padding: [0, 0, 10, 10]
+                orientation: "vertical"
+                RstDocument:
+                    text: root.data['fc_deck_excerpt'] if 'fc_deck_excerpt' in root.data else ""
+                BoxLayout:
+                    size_hint_y: 0.1
+                    Button:
+                        text: "Edit Deck"
+                        on_release: lib.Navigation.page_nav(dest='new_flash_card_deck', orig='flash_card_deck', edit=True)
+                    Button:
+                        text: "Delete Deck"
+                        on_release: lib.Navigation.confirm_flash_card_deck_delete(root.fc_deck_id)
+                    Button:
+                        text: "Study Deck"
+
+<NewFlashCardDeckScreen>:
+    title: "New/Edit Flash Card Deck"
+    BoxLayout:
+        orientation: "vertical"
+        BoxLayout:
+            size_hint_y: 0.1
+            padding: 10
+            orientation: "vertical"
+            BoxLayout:
+                Label:
+                    size_hint_x: 0.3
+                    text: "Deck Name"
+                TextInput:
+                    text: root.data['fc_deck_name'] if 'fc_deck_name' in root.data else ""
+                    padding_y: [self.height / 2.0 - (self.line_height / 2.0) * len(self._lines), 0]
+                    id: new_author_first
+                    on_text: root.data['fc_deck_name'] = self.text
+        BoxLayout:
+            TextInput:
+                id: new_fc_tag_excerpt
+                multiline: True
+                text: root.data['fc_deck_excerpt'] if 'fc_deck_excerpt' in root.data else ""
+                on_text: root.data['fc_deck_excerpt'] = self.text
+            RstDocument:
+                text: new_fc_tag_excerpt.text
+                show_errors: True
+        BoxLayout:
+            size_hint_y: 0.2
+            Button:
+                text: "Cancel"
+                on_release: root.manager.current = root.data['prev_page'] if 'prev_page' in root.data else 'new_flash_card'
+            Button:
+                text: "Submit"
+                on_release: root.dispatch('on_submit', root.data)
+
+<DeleteFlashCardDeckConfirmationPopup>:
+    fc_deck_id: ''
+    fc_deck_name: ''
+    title: root.fc_deck_name
+    BoxLayout:
+        Button:
+            text: "Yes, delete this deck."
+            on_release: root.on_confirm()
+        Button:
+            text: "No, don't delete this deck."
+            on_release: root.on_close()
+
+<DeleteFlashCardConfirmationPopup>:
+    fc_id: ''
+    fc_title: ''
+    title: root.fc_title
+    BoxLayout:
+        Button:
+            text: "Yes, delete this card."
+            on_release: root.on_confirm()
+        Button:
+            text: "No, don't delete this card."
+            on_release: root.on_close()
+
