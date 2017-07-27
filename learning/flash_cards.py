@@ -13,10 +13,10 @@ conn = sqlite3.connect("./Assets/db_productivity.sqlite3")
 conn.execute('pragma foreign_keys=on')
 c = conn.cursor()
 
+
 class FlashCardsScreen(Screen):
 
     def on_parent(self, Screen, parent):
-        gd = App.get_running_app()
         fc_deck_list = Queries.get_fc_deck_list()
         fc_decks = []
         for fc_deck in fc_deck_list:
@@ -29,28 +29,77 @@ class FlashCardsScreen(Screen):
         self.fc_deck_rv.data = fc_decks
 
 
+class FlashCardDeckStudyScreen(Screen):
+    data = DictProperty({})
+
+    def on_parent(self, widget, parent):
+        gd = App.get_running_app()
+        from random import shuffle
+        self.fc_deck_id = gd.glob_dict['fc_deck_id']
+        fc_list = Queries.get_fc_list(deck_id=self.fc_deck_id, data=True, study=False)
+        shuffle(fc_list)
+        # self.data['fc_id'] = fc_
+        # self.data['fc_title'] =
+
+
+class AllFlashCardsScreen(Screen):
+    data = DictProperty({})
+
+    def on_parent(self, widget, parent):
+        gd = App.get_running_app()
+        fc_order_by = gd.glob_dict['fc_order_by'] if 'fc_order_by' in gd.glob_dict else "fc_title"
+        fc_list = []
+        try:
+            fc_full_list = Queries.get_fc_list(order_by=fc_order_by, order_by_dir="ASC")
+            if len(fc_full_list) > 0:
+                for fc in fc_full_list:
+                    fc_deck_list = Queries.get_fc_deck_list(fc_id=fc[0])
+                    fc_tag_list = Queries.get_fc_tag_list(fc_id=fc[0])
+                    fc_tags = []
+                    fc_decks = []
+                    for fc_deck in fc_deck_list:
+                        fc_decks.append(fc_deck[1])
+                    for fc_tag in fc_tag_list:
+                        fc_tags.append(fc_tag[1])
+                    temp = {
+                        "fc_id": str(fc[0]),
+                        "fc_title": fc[1],
+                        "fc_decks": ", ".join(fc_decks),
+                        "fc_tags": ", ".join(fc_tags)
+                    }
+                    fc_list.append(temp)
+                self.fc_rv.data = fc_list
+            else:
+                self.fc_rv.data = ""
+        except sqlite3.Error as e:
+            print("An error occurred:", e.args[0])
+
+
 class FlashCardDeckScreen(Screen):
     data = DictProperty({})
 
     def on_parent(self, widget, parent):
         gd = App.get_running_app()
-        self.fc_deck_id = gd.glob_dict['fc_deck_id']
-        fc_deck_data = Queries.get_fc_deck_data(self.fc_deck_id)
-        fc_deck_fc_list = Queries.get_fc_list_from_deck(self.fc_deck_id)
-        fc_deck_list = []
-        if len(fc_deck_fc_list) > 0:
-            for fc in fc_deck_fc_list:
-                temp = {
-                    "fc_id": str(fc[0]),
-                    "fc_title": (fc[1])
-                }
-                fc_deck_list.append(temp)
-            self.fc_rv.data = fc_deck_list
-        else:
-            self.fc_rv.data = ""
-        self.data['fc_deck_id'] = self.fc_deck_id
-        self.data['fc_deck_name'] = fc_deck_data[0]
-        self.data['fc_deck_excerpt'] = fc_deck_data[1]
+        try:
+            self.fc_deck_id = gd.glob_dict['fc_deck_id']
+            fc_deck_data = Queries.get_fc_deck_data(self.fc_deck_id)
+            fc_deck_fc_list = Queries.get_fc_list(deck_id=self.fc_deck_id)
+            fc_list = []
+            if len(fc_deck_fc_list) > 0:
+                for fc in fc_deck_fc_list:
+                    temp = {
+                        "fc_id": str(fc[0]),
+                        "fc_title": (fc[1])
+                    }
+                    fc_list.append(temp)
+                self.fc_rv.data = fc_list
+            else:
+                self.fc_rv.data = ""
+            self.data['fc_deck_id'] = self.fc_deck_id
+            self.data['fc_deck_name'] = fc_deck_data[0]
+            self.data['fc_deck_excerpt'] = fc_deck_data[1]
+        except sqlite3.Error as e:
+            print("An error occurred:", e.args[0])
 
 
 class NewFlashCardDeckScreen(Screen):
@@ -124,11 +173,11 @@ class NewFlashCardScreen(Screen):
         if gd.glob_dict['edit']:
             self.fc_id = gd.glob_dict['fc_id']
             fc_data = Queries.get_fc_data(self.fc_id)
-            fc_tags = Queries.get_fc_tags_from_fc(self.fc_id)
+            fc_tags = Queries.get_fc_tag_list(fc_id=self.fc_id)
             if len(fc_tags) > 0:
                 self.fc_tags = ""
                 for tag in fc_tags:
-                    self.fc_tags += str(tag[0]) + ";"
+                    self.fc_tags += str(tag[1]) + ";"
                 self.fc_tags = self.fc_tags[:-1]
             else:
                 self.fc_tags = ""
@@ -152,7 +201,8 @@ class NewFlashCardScreen(Screen):
             self.data['fc_front'] = ""
             self.data['fc_back'] = ""
             self.data['fc_difficulty'] = ""
-            # self.data['fc_tags'] = ""
+            if 'fc_tags' in self.data:
+                del self.data['fc_tags']
         self.data['orig'] = gd.glob_dict['orig']
 
     def get_spinner_lists(self):
@@ -161,10 +211,10 @@ class NewFlashCardScreen(Screen):
     def on_submit(self, data):
         gd = App.get_running_app()
         self.data['orig'] = gd.glob_dict['orig']
-        title = data['fc_title'] if data['fc_title'] else " "
-        front = data['fc_front'] if data['fc_front'] else " "
-        back = data['fc_back'] if data['fc_back'] else " "
-        difficulty = data['fc_difficulty'] if data['fc_difficulty'] else 0
+        title = data['fc_title'] if 'fc_title' in data else " "
+        front = data['fc_front'] if 'fc_front' in data else " "
+        back = data['fc_back'] if 'fc_back' in data else " "
+        difficulty = data['fc_difficulty'] if 'fc_difficulty' in data else 0
         if gd.glob_dict['edit']:
             self.fc_id = gd.glob_dict['fc_id']
             try:
@@ -215,8 +265,14 @@ class NewFlashCardScreen(Screen):
                 except sqlite3.Error as e:
                     print("An error occurred:", e.args[0])
 
-        self.data = {}
-        Navigation.page_nav(dest='flash_cards', orig='new_flash_card', edit=False)
+        # self.data.clear()
+        data.clear()
+        self.data.clear()
+        self.data_fc_tag_ids.clear()
+        self.data_fc_deck_ids.clear()
+
+        # Navigation.page_nav(dest='empty')
+        Navigation.page_nav(dest='flash_cards', orig='new_flash_card', edit=False, del_cls='NewFlashCardScreen')
 
 
 class NewFlashCardTagScreen(Screen):
@@ -258,79 +314,3 @@ class NewFlashCardTagScreen(Screen):
         gd.glob_dict['edit'] = False
         conn.commit()
         Navigation.page_nav(dest=self.data['orig'], orig='flash_cards', edit=False)
-
-
-class DeleteFlashCardDeckConfirmationPopup(Popup):
-
-    def on_parent(self, widget, parent):
-        gd = App.get_running_app()
-        self.delete_fc_deck_id = gd.glob_dict['delete_fc_deck_id']
-        c.execute("""
-                    SELECT `fc_deck_name`
-                    FROM `tbl_learning_flash_cards_decks`
-                    WHERE `fc_deck_id` = '{fdid}'
-                    """.format(fdid=self.delete_fc_deck_id))
-        try:
-            self.fc_deck_name = c.fetchone()[0]
-        except:
-            self.gd = App.get_running_app()
-            self.gd.sm.current = 'flash_cards'
-
-    def on_confirm(self):
-        gd = App.get_running_app()
-        c.execute("""
-                    DELETE
-                    FROM `tbl_learning_flash_cards_decks`
-                    WHERE `fc_deck_id` = '{fdid}'
-                    """.format(fdid=self.delete_fc_deck_id))
-        conn.commit()
-        c.execute("""
-                    SELECT `fc_deck_id`
-                    FROM `tbl_learning_flash_cards_decks`
-                    """)
-        self.fc_deck_id = c.fetchone()[0]
-        self.gd = App.get_running_app()
-        self.gd.glob_dict['fc_deck_id'] = self.fc_deck_id
-        gd.glob_dict['edit'] = False
-        self.dismiss()
-
-    def on_close(self):
-        self.dismiss()
-
-
-class DeleteFlashCardConfirmationPopup(Popup):
-
-    def on_parent(self, widget, parent):
-        gd = App.get_running_app()
-        self.delete_fc_deck_id = gd.glob_dict['delete_fc_deck_id']
-        c.execute("""
-                    SELECT `fc_deck_name`
-                    FROM `tbl_learning_flash_cards_decks`
-                    WHERE `fc_deck_id` = '{fdid}'
-                    """.format(fdid=self.delete_fc_deck_id))
-        try:
-            self.fc_deck_name = c.fetchone()[0]
-        except:
-            self.gd = App.get_running_app()
-            self.gd.sm.current = 'flash_cards'
-
-    def on_confirm(self):
-        gd = App.get_running_app()
-        c.execute("""
-                    DELETE
-                    FROM `tbl_learning_flash_cards_decks`
-                    WHERE `fc_deck_id` = '{fdid}'
-                    """.format(fdid=self.delete_fc_deck_id))
-        conn.commit()
-        c.execute("""
-                    SELECT `fc_deck_id`
-                    FROM `tbl_learning_flash_cards_decks`
-                    """)
-        self.fc_deck_id = c.fetchone()[0]
-        self.gd = App.get_running_app()
-        self.gd.glob_dict['fc_deck_id'] = self.fc_deck_id
-        gd.glob_dict['edit'] = False
-        self.dismiss()
-
-    def on_close(self):
-        self.dismiss()

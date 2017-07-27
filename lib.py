@@ -33,11 +33,20 @@ class Queries:
         return fc_deck_data
 
     @staticmethod
-    def get_fc_deck_list():
-        c.execute("""
-                    SELECT  `fc_deck_id`,`fc_deck_name`,`fc_deck_excerpt`
-                    FROM    `tbl_learning_flash_cards_decks`
-                """)
+    def get_fc_deck_list(**kwargs):
+        if 'fc_id' in kwargs:
+            c.execute("""
+                        SELECT  `tbl_learning_flash_cards_decks`.`fc_deck_id`,
+                                `tbl_learning_flash_cards_decks`.`fc_deck_name`
+                        FROM    `tbl_learning_flash_cards_decks`,`tbl_learning_map_fc_fc_decks`
+                        WHERE   `tbl_learning_flash_cards_decks`.`fc_deck_id` = `tbl_learning_map_fc_fc_decks`.`fc_deck_id`
+                            AND `tbl_learning_map_fc_fc_decks`.`fc_id` = '{fcid}'
+                    """.format(fcid=kwargs['fc_id']))
+        else:
+            c.execute("""
+                        SELECT  `fc_deck_id`,`fc_deck_name`,`fc_deck_excerpt`
+                        FROM    `tbl_learning_flash_cards_decks`
+                    """)
         fc_deck_list = c.fetchall()
         return fc_deck_list
 
@@ -54,13 +63,106 @@ class Queries:
         return fc_tags
 
     @staticmethod
-    def get_fc_list_from_deck(fc_deck_id):
-        c.execute("""
-                    SELECT  `tbl_learning_map_fc_fc_decks`.`fc_id`,`tbl_learning_flash_cards`.`fc_title`
-                    FROM    `tbl_learning_map_fc_fc_decks`,`tbl_learning_flash_cards`
-                    WHERE   `tbl_learning_map_fc_fc_decks`.`fc_deck_id` = '{fdid}'
-                        AND `tbl_learning_map_fc_fc_decks`.`fc_id` = `tbl_learning_flash_cards`.`fc_id`
-                """.format(fdid=fc_deck_id))
+    def get_fc_list(**kwargs):
+        data = kwargs['data'] if 'data' in kwargs else False
+        study = kwargs['study'] if 'study' in kwargs else False
+        """
+        kwargs:
+            data (bool): True pulls all card data, default False
+            deck_id (int): Pulls data from a specific deck with id 'fc_deck_id'
+            study (book): True pulls only those with it's next study date equal to today, default False
+            order_by (str): Order by column
+                order_by_dir (str): 'ASC' or 'DESC', required if 'order_by' in kwargs
+        """
+
+        # if 'fc_order_by' in kwargs:
+        #     fc_order_by = kwargs['fc_order_by']
+        #     c.execute("""
+        #                 SELECT  `fc_id`,`fc_title`
+        #                 FROM    `tbl_learning_flash_cards`
+        #                 ORDER BY `{ob}`
+        #             """.format(ob=fc_order_by))
+
+
+        command = "SELECT `tbl_learning_flash_cards`.`fc_id`,`tbl_learning_flash_cards`.`fc_title`"
+        if data:
+            command += ",`tbl_learning_flash_cards`.`fc_front`,`tbl_learning_flash_cards`.`fc_back`"
+            command += ",`tbl_learning_flash_cards`.`fc_difficulty`,`tbl_learning_flash_cards`.`fc_level`"
+            command += ",`tbl_learning_flash_cards`.`fc_next_date`"
+        command += "FROM `tbl_learning_flash_cards`"
+
+        if 'deck_id' in kwargs:
+            deck_id = kwargs['deck_id']
+            command += ",`tbl_learning_map_fc_fc_decks`"
+            command += "WHERE `tbl_learning_flash_cards`.`fc_id` = `tbl_learning_map_fc_fc_decks`.`fc_id`"
+            command += "AND `tbl_learning_map_fc_fc_decks`.`fc_deck_id` = '{fdid}'".format(fdid=deck_id)
+
+        if study:
+            import datetime
+            today = datetime.datetime.today()
+            today = "{y}-{m}-{d}".format(y=today.year, m=today.strftime('%m'), d=today.strftime('%d'))
+            command += "AND `tbl_learning_flash_cards`.`fc_next_date` = '{t}'".format(t=today)
+
+        if 'order_by' in kwargs:
+            order_by = kwargs['order_by']
+            order_by_dir = kwargs['order_by_dir']
+            command += "ORDER BY `{ob}` {obd}".format(ob=order_by, obd=order_by_dir)
+
+        c.execute(command)
+
+        #     if 'data' in kwargs:
+        #         if 'study' in kwargs:
+        #             import datetime
+        #             today = datetime.datetime.now()
+        #             today = "{y}-{m}-{d}".format(y=today.year, m=today.month, d=today.day)
+        #             c.execute("""
+        #                         SELECT  `tbl_learning_flash_cards`.`fc_id`,`tbl_learning_flash_cards`.`fc_title`,
+        #                                  `tbl_learning_flash_cards`.`fc_front`,`tbl_learning_flash_cards`.`fc_back`,
+        #                                  `tbl_learning_flash_cards`.`fc_difficulty`,`tbl_learning_flash_cards`.`fc_level`,
+        #                                  `tbl_learning_flash_cards`.`fc_next_date`
+        #                         FROM     `tbl_learning_flash_cards`,`tbl_learning_fc_fc_decks`
+        #                         WHERE    `tbl_learning_flash_cards`.`fc_id` = `tbl_learning_fc_fc_decks`.`fc_id`
+        #                             AND  `tbl_learning_fc_fc_decks`.`fc_deck_id` = '{fdid}'
+        #                             AND  `tbl_learning_flash_cards`.`fc_next_date` = {t}
+        #                     """.format(fdid=fc_deck_id, t=today))
+        #         else:
+        #             c.execute("""
+        #                         SELECT  `tbl_learning_flash_cards`.`fc_id`,`tbl_learning_flash_cards`.`fc_title`,
+        #                                  `tbl_learning_flash_cards`.`fc_front`,`tbl_learning_flash_cards`.`fc_back`,
+        #                                  `tbl_learning_flash_cards`.`fc_difficulty`,`tbl_learning_flash_cards`.`fc_level`,
+        #                                  `tbl_learning_flash_cards`.`fc_next_date`
+        #                         FROM     `tbl_learning_flash_cards`,`tbl_learning_fc_fc_decks`
+        #                         WHERE    `tbl_learning_flash_cards`.`fc_id` = `tbl_learning_fc_fc_decks`.`fc_id`
+        #                             AND  `tbl_learning_fc_fc_decks`.`fc_deck_id` = '{fdid}'
+        #                     """.format(fdid=fc_deck_id))
+        #     else:
+        #         c.execute("""
+        #                     SELECT  `tbl_learning_flash_cards`.`fc_id`,`tbl_learning_flash_cards`.`fc_title`,
+        #                     FROM    `tbl_learning_map_fc_fc_decks`,`tbl_learning_flash_cards`
+        #                     WHERE   `tbl_learning_map_fc_fc_decks`.`fc_deck_id` = '{fdid}'
+        #                         AND `tbl_learning_map_fc_fc_decks`.`fc_id` = `tbl_learning_flash_cards`.`fc_id`
+        #                 """.format(fdid=fc_deck_id))
+        #
+        # if 'fc_tag_id' in kwargs and 'data' in kwargs:
+        #     fc_tag_id = kwargs['fc_tag_id']
+        #     c.execute("""
+        #                 SELECT  `tbl_learning_flash_cards`.`fc_id`,`tbl_learning_flash_cards`.`fc_title`,
+        #                          `tbl_learning_flash_cards`.`fc_front`,`tbl_learning_flash_cards`.`fc_back`,
+        #                          `tbl_learning_flash_cards`.`fc_difficulty`
+        #                 FROM     `tbl_learning_flash_cards`,`tbl_learning_fc_fc_tags`
+        #                 WHERE    `tbl_learning_flash_cards`.`fc_id` = `tbl_learning_fc_fc_tags`.`fc_id`
+        #                      AND `tbl_learning_fc_fc_tags`.`fc_tag_id` = '{ftid}'
+        #             """.format(ftid=fc_tag_id))
+        #
+        # if 'fc_tag_id' in kwargs and not 'data' in kwargs:
+        #     fc_tag_id = kwargs['fc_tag_id']
+        #     c.execute("""
+        #                 SELECT  `tbl_learning_flash_cards`.`fc_id`,`tbl_learning_flash_cards`.`fc_title`
+        #                 FROM    `tbl_learning_map_fc_fc_tags`,`tbl_learning_flash_cards`
+        #                 WHERE   `tbl_learning_map_fc_fc_tags`.`fc_tag_id` = '{ftid}'
+        #                     AND `tbl_learning_map_fc_fc_tags`.`fc_id` = `tbl_learning_flash_cards`.`fc_id`
+        #             """.format(ftid=fc_tag_id))
+
         fc_list = c.fetchall()
         return fc_list
 
@@ -75,25 +177,23 @@ class Queries:
         return fc_data
 
     @staticmethod
-    def get_fc_tag_list():
-        c.execute("""
-                    SELECT  `fc_tag_id`,`fc_tag_name`
-                    FROM    `tbl_learning_flash_cards_tags`
-                """)
+    def get_fc_tag_list(**kwargs):
+        if 'fc_id' in kwargs:
+            c.execute("""
+                        SELECT  `tbl_learning_flash_cards_tags`.`fc_tag_id`,
+                                `tbl_learning_flash_cards_tags`.`fc_tag_name`
+                        FROM    `tbl_learning_flash_cards_tags`, `tbl_learning_map_fc_fc_tags`
+                        WHERE   `tbl_learning_map_fc_fc_tags`.`fc_id` = '{fcid}'
+                            AND `tbl_learning_flash_cards_tags`.`fc_tag_id` = `tbl_learning_map_fc_fc_tags`.`fc_tag_id`
+                        ORDER BY `tbl_learning_flash_cards_tags`.`fc_tag_name`
+                    """.format(fcid=kwargs['fc_id']))
+        else:
+            c.execute("""
+                        SELECT  `fc_tag_id`,`fc_tag_name`
+                        FROM    `tbl_learning_flash_cards_tags`
+                    """)
         fc_tag_list = c.fetchall()
         return fc_tag_list
-
-    @staticmethod
-    def get_fc_tags_from_fc(fc_id):
-        c.execute("""
-                    SELECT  `tbl_learning_flash_cards_tags`.`fc_tag_name`
-                    FROM    `tbl_learning_flash_cards_tags`, `tbl_learning_map_fc_fc_tags`
-                    WHERE   `tbl_learning_map_fc_fc_tags`.`fc_id` = '{fcid}'
-                        AND `tbl_learning_flash_cards_tags`.`fc_tag_id` = `tbl_learning_map_fc_fc_tags`.`fc_tag_id`
-                    ORDER BY `tbl_learning_flash_cards_tags`.`fc_tag_name`
-                """.format(fcid=fc_id))
-        fc_tags = c.fetchall()
-        return fc_tags
 
     @staticmethod
     def get_fc_tag_data(fc_tag_id):
@@ -216,10 +316,7 @@ class Navigation:
     @staticmethod
     def page_nav(**kwargs):
         gd = App.get_running_app()
-        if 'dest' in kwargs and kwargs['dest'] == 'reset':
-            gd.glob_dict['reset_page'] = kwargs['orig'] if 'orig' in kwargs else 'home'
-            Navigation.page_nav(dest='empty')
-        elif 'dest' in kwargs:
+        if 'dest' in kwargs:
             if kwargs['dest'] == 'prev_page':
                 dest = gd.glob_dict['orig']
             else:
@@ -228,6 +325,9 @@ class Navigation:
             gd.glob_dict['cur_page'] = dest
         else:
             dest = 'home'
+        if 'clear' in kwargs:
+            if kwargs['clear'] in gd.glob_dict:
+                del gd.glob_dict[kwargs['clear']]
         gd.glob_dict['edit'] = kwargs['edit'] if 'edit' in kwargs else False
         if 'book_id' in kwargs:
             gd.glob_dict['book_id'] = kwargs['book_id']
@@ -317,19 +417,9 @@ class DeleteFlashCardDeckConfirmationPopup(Popup):
                     WHERE `fc_deck_id` = '{fdid}'
                     """.format(fdid=self.fc_deck_id))
         conn.commit()
-        try:
-            c.execute("""
-                        SELECT `fc_deck_id`
-                        FROM `tbl_learning_flash_cards_decks`
-                        """)
-            self.fc_deck_id = c.fetchone()[0]
-            self.gd.glob_dict['fc_deck_id'] = self.fc_deck_id
-        except:
-            pass
         gd.glob_dict['edit'] = False
-        if gd.glob_dict['cur_page'] != 'flash_card_deck':
-            Navigation.page_nav(dest='flash_cards')
-        Navigation.page_nav(dest=gd.glob_dict['cur_page'], orig=gd.glob_dict['orig'])
+        Navigation.page_nav(dest='empty')
+        Navigation.page_nav(dest='flash_cards', orig='flash_cards')
         self.dismiss()
 
     def on_close(self):

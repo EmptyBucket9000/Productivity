@@ -6,6 +6,11 @@
 ## Flash Cards Screen
 ####################################################################################
 
+<FlashCardDeckStudyScreen>:
+    BoxLayout:
+        orientation: "vertical"
+        TopMenu:
+
 <FlashCardDeckRow@BoxLayout>:
     fc_deck_id: ''
     fc_deck_name: ''
@@ -29,7 +34,7 @@
             orientation: "vertical"
             Button:
                 text: "Study"
-    #            on_release: lib.Navigation.page_nav(dest='flash_card_deck', orig='flash_cards', fc_deck_id=root.fc_deck_id)
+                on_release: lib.Navigation.page_nav(dest='flash_card_deck_study', orig='flash_cards', fc_deck_id=root.fc_deck_id)
             Button:
                 size_hint_y: 0.7
                 text: "View"
@@ -69,6 +74,69 @@
             Button:
                 text: "Add New Deck"
                 on_release: lib.Navigation.page_nav(dest='new_flash_card_deck', orig='flash_cards', edit=False)
+            Button:
+                text: "View All Cards"
+                on_release: lib.Navigation.page_nav(dest='all_flash_cards', orig='flash_cards', edit=False)
+
+<FlashCardRow@BoxLayout>:
+    fc_id: ''
+    fc_title: ''
+    fc_decks: ''
+    fc_tags: ''
+    fc_deck_id: ''
+    canvas.before:
+        Color:
+            rgba: 0.5, 0.5, 0.5, 1
+        Rectangle:
+            size: self.size
+            pos: self.pos
+    BoxLayout:
+        Label:
+            text: root.fc_title
+        Label:
+            text: root.fc_tags
+        Label:
+            text: root.fc_decks
+        Button:
+            size_hint_x: 0.2
+            text: "View/Edit"
+            on_release: lib.Navigation.page_nav(dest='new_flash_card', orig='flash_card_deck', edit=True, fc_id=root.fc_id)
+        Button:
+            size_hint_x: 0.1
+            text: "D\nE\nL"
+            on_release: lib.Navigation.confirm_flash_card_delete(root.fc_id)
+
+<AllFlashCardsScreen>:
+    fc_rv: fc_rv
+    BoxLayout:
+        orientation: "vertical"
+        TopMenu:
+        BoxLayout:
+            RecycleView:
+                id: fc_rv
+                scroll_type: ['bars', 'content']
+                scroll_wheel_distance: dp(114)
+                bar_width: dp(10)
+                viewclass: 'FlashCardRow'
+                RecycleBoxLayout:
+                    padding: [10, 0, 10, 0]
+                    default_size: None, dp(150)
+                    default_size_hint: 1, None
+                    size_hint_y: None
+                    height: self.minimum_height
+                    orientation: 'vertical'
+                    spacing: dp(2)
+        BoxLayout:
+            size_hint_y: 0.1
+            Button:
+                text: "Add New Flash Card"
+                on_release: lib.Navigation.page_nav(dest='new_flash_card', orig='all_flash_cards', edit=False)
+            Button:
+                text: "Add New Deck"
+                on_release: lib.Navigation.page_nav(dest='new_flash_card_deck', orig='all_flash_cards', edit=False)
+            Button:
+                text: "View All Decks"
+                on_release: lib.Navigation.page_nav(dest='flash_cards', orig='all_flash_cards', edit=False)
 
 <NewFlashCardScreen>:
     BoxLayout:
@@ -166,7 +234,7 @@
             size_hint_y: 0.2
             Button:
                 text: "Cancel"
-                on_release: lib.Navigation.page_nav(dest='prev_page', orig='new_flash_card', edit=False)
+                on_release: lib.Navigation.page_nav(dest='flash_cards', orig='new_flash_card', edit=False)
             Button:
                 text: "Submit"
                 on_release: root.dispatch('on_submit', root.data)
@@ -200,7 +268,7 @@
             size_hint_y: 0.2
             Button:
                 text: "Cancel"
-                on_release: root.manager.current = root.data['prev_page'] if 'prev_page' in root.data else 'new_flash_card'
+                on_release: lib.Navigation.page_nav(dest='prev_page', orig='new_flash_card_tag', edit=False)
             Button:
                 text: "Submit"
                 on_release: root.dispatch('on_submit', root.data)
@@ -271,6 +339,7 @@
                         on_release: lib.Navigation.confirm_flash_card_deck_delete(root.fc_deck_id)
                     Button:
                         text: "Study Deck"
+                        on_release: lib.Navigation.page_nav(dest='flash_card_deck_study', orig='flash_card_deck', fc_deck_id=root.fc_deck_id)
 
 <NewFlashCardDeckScreen>:
     title: "New/Edit Flash Card Deck"
@@ -302,7 +371,7 @@
             size_hint_y: 0.2
             Button:
                 text: "Cancel"
-                on_release: root.manager.current = root.data['prev_page'] if 'prev_page' in root.data else 'new_flash_card'
+                on_release: lib.Navigation.page_nav(dest='prev_page', orig='new_flash_card_deck', edit=False)
             Button:
                 text: "Submit"
                 on_release: root.dispatch('on_submit', root.data)

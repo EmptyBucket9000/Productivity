@@ -24,16 +24,14 @@ class HomeScreen(Screen):
 class HelpScreen(Screen):
     pass
 class MultiSelectSpinner(Button):
-    def __init__(self, **kwargs):
-        super(books.NewBookScreen, self).__init__(**kwargs)
-        self.author_list = Button()
-        self.add_widget(self.author_list)
 
     dropdown = ObjectProperty(None)
     values = ListProperty([])
     selected_values = ListProperty([])
 
     def __init__(self, **kwargs):
+        # self.values.clear()
+        # self.selected_values.clear()
         self.bind(dropdown=self.update_dropdown)
         self.bind(values=self.update_dropdown)
         super(MultiSelectSpinner, self).__init__(**kwargs)
@@ -91,7 +89,9 @@ class ProductivityApp(App):
         self.sm.add_widget(books.NewPublisherScreen(name='new_book_publisher'))
 
         self.sm.add_widget(fc.FlashCardsScreen(name='flash_cards'))
+        self.sm.add_widget(fc.AllFlashCardsScreen(name='all_flash_cards'))
         self.sm.add_widget(fc.FlashCardDeckScreen(name='flash_card_deck'))
+        self.sm.add_widget(fc.FlashCardDeckStudyScreen(name='flash_card_deck_study'))
         self.sm.add_widget(fc.NewFlashCardScreen(name='new_flash_card'))
         self.sm.add_widget(fc.NewFlashCardTagScreen(name='new_flash_card_tag'))
         self.sm.add_widget(fc.NewFlashCardDeckScreen(name='new_flash_card_deck'))

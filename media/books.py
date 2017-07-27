@@ -223,6 +223,7 @@ class NewBookScreen(Screen):
             book_id = self.book_id
         else:
             book_id = MiscFuns.get_id(16)
+        gd.glob_dict['book_id'] = book_id
         if data['cover_front']:
             cover_front_ext = data['cover_front'].split('.')[-1]
             src = data['cover_front']
