@@ -4,7 +4,7 @@ from kivy.properties import ObjectProperty
 from kivy.uix.popup import Popup
 import string, random, sqlite3
 
-conn = sqlite3.connect("./Assets/db_productivity.sqlite3")
+conn = sqlite3.connect("./Assets/db_productivity.sqlite3", detect_types=sqlite3.PARSE_DECLTYPES)
 conn.execute('pragma foreign_keys=on')
 c = conn.cursor()
 
@@ -75,20 +75,12 @@ class Queries:
                 order_by_dir (str): 'ASC' or 'DESC', required if 'order_by' in kwargs
         """
 
-        # if 'fc_order_by' in kwargs:
-        #     fc_order_by = kwargs['fc_order_by']
-        #     c.execute("""
-        #                 SELECT  `fc_id`,`fc_title`
-        #                 FROM    `tbl_learning_flash_cards`
-        #                 ORDER BY `{ob}`
-        #             """.format(ob=fc_order_by))
-
 
         command = "SELECT `tbl_learning_flash_cards`.`fc_id`,`tbl_learning_flash_cards`.`fc_title`"
         if data:
             command += ",`tbl_learning_flash_cards`.`fc_front`,`tbl_learning_flash_cards`.`fc_back`"
             command += ",`tbl_learning_flash_cards`.`fc_difficulty`,`tbl_learning_flash_cards`.`fc_level`"
-            command += ",`tbl_learning_flash_cards`.`fc_next_date`"
+            command += ",`tbl_learning_flash_cards`.`fc_prev_date` AS '[timestamp]',`tbl_learning_flash_cards`.`fc_next_date` AS '[timestamp]'"
         command += "FROM `tbl_learning_flash_cards`"
 
         if 'deck_id' in kwargs:
@@ -99,9 +91,9 @@ class Queries:
 
         if study:
             import datetime
-            today = datetime.datetime.today()
-            today = "{y}-{m}-{d}".format(y=today.year, m=today.strftime('%m'), d=today.strftime('%d'))
-            command += "AND `tbl_learning_flash_cards`.`fc_next_date` = '{t}'".format(t=today)
+            now = datetime.datetime.utcnow()
+            comp = datetime.datetime(now.year, now.month, now.day + 1, 5)
+            command += "AND `tbl_learning_flash_cards`.`fc_next_date` <= '{c}'".format(c=comp)
 
         if 'order_by' in kwargs:
             order_by = kwargs['order_by']
@@ -109,60 +101,6 @@ class Queries:
             command += "ORDER BY `{ob}` {obd}".format(ob=order_by, obd=order_by_dir)
 
         c.execute(command)
-
-        #     if 'data' in kwargs:
-        #         if 'study' in kwargs:
-        #             import datetime
-        #             today = datetime.datetime.now()
-        #             today = "{y}-{m}-{d}".format(y=today.year, m=today.month, d=today.day)
-        #             c.execute("""
-        #                         SELECT  `tbl_learning_flash_cards`.`fc_id`,`tbl_learning_flash_cards`.`fc_title`,
-        #                                  `tbl_learning_flash_cards`.`fc_front`,`tbl_learning_flash_cards`.`fc_back`,
-        #                                  `tbl_learning_flash_cards`.`fc_difficulty`,`tbl_learning_flash_cards`.`fc_level`,
-        #                                  `tbl_learning_flash_cards`.`fc_next_date`
-        #                         FROM     `tbl_learning_flash_cards`,`tbl_learning_fc_fc_decks`
-        #                         WHERE    `tbl_learning_flash_cards`.`fc_id` = `tbl_learning_fc_fc_decks`.`fc_id`
-        #                             AND  `tbl_learning_fc_fc_decks`.`fc_deck_id` = '{fdid}'
-        #                             AND  `tbl_learning_flash_cards`.`fc_next_date` = {t}
-        #                     """.format(fdid=fc_deck_id, t=today))
-        #         else:
-        #             c.execute("""
-        #                         SELECT  `tbl_learning_flash_cards`.`fc_id`,`tbl_learning_flash_cards`.`fc_title`,
-        #                                  `tbl_learning_flash_cards`.`fc_front`,`tbl_learning_flash_cards`.`fc_back`,
-        #                                  `tbl_learning_flash_cards`.`fc_difficulty`,`tbl_learning_flash_cards`.`fc_level`,
-        #                                  `tbl_learning_flash_cards`.`fc_next_date`
-        #                         FROM     `tbl_learning_flash_cards`,`tbl_learning_fc_fc_decks`
-        #                         WHERE    `tbl_learning_flash_cards`.`fc_id` = `tbl_learning_fc_fc_decks`.`fc_id`
-        #                             AND  `tbl_learning_fc_fc_decks`.`fc_deck_id` = '{fdid}'
-        #                     """.format(fdid=fc_deck_id))
-        #     else:
-        #         c.execute("""
-        #                     SELECT  `tbl_learning_flash_cards`.`fc_id`,`tbl_learning_flash_cards`.`fc_title`,
-        #                     FROM    `tbl_learning_map_fc_fc_decks`,`tbl_learning_flash_cards`
-        #                     WHERE   `tbl_learning_map_fc_fc_decks`.`fc_deck_id` = '{fdid}'
-        #                         AND `tbl_learning_map_fc_fc_decks`.`fc_id` = `tbl_learning_flash_cards`.`fc_id`
-        #                 """.format(fdid=fc_deck_id))
-        #
-        # if 'fc_tag_id' in kwargs and 'data' in kwargs:
-        #     fc_tag_id = kwargs['fc_tag_id']
-        #     c.execute("""
-        #                 SELECT  `tbl_learning_flash_cards`.`fc_id`,`tbl_learning_flash_cards`.`fc_title`,
-        #                          `tbl_learning_flash_cards`.`fc_front`,`tbl_learning_flash_cards`.`fc_back`,
-        #                          `tbl_learning_flash_cards`.`fc_difficulty`
-        #                 FROM     `tbl_learning_flash_cards`,`tbl_learning_fc_fc_tags`
-        #                 WHERE    `tbl_learning_flash_cards`.`fc_id` = `tbl_learning_fc_fc_tags`.`fc_id`
-        #                      AND `tbl_learning_fc_fc_tags`.`fc_tag_id` = '{ftid}'
-        #             """.format(ftid=fc_tag_id))
-        #
-        # if 'fc_tag_id' in kwargs and not 'data' in kwargs:
-        #     fc_tag_id = kwargs['fc_tag_id']
-        #     c.execute("""
-        #                 SELECT  `tbl_learning_flash_cards`.`fc_id`,`tbl_learning_flash_cards`.`fc_title`
-        #                 FROM    `tbl_learning_map_fc_fc_tags`,`tbl_learning_flash_cards`
-        #                 WHERE   `tbl_learning_map_fc_fc_tags`.`fc_tag_id` = '{ftid}'
-        #                     AND `tbl_learning_map_fc_fc_tags`.`fc_id` = `tbl_learning_flash_cards`.`fc_id`
-        #             """.format(ftid=fc_tag_id))
-
         fc_list = c.fetchall()
         return fc_list
 
@@ -391,6 +329,36 @@ class Navigation:
         gd.glob_dict['author_id'] = author_id
         gd.glob_dict['edit'] = True
         gd.sm.current = 'new_book_author'
+
+
+class RstButtons:
+
+    @staticmethod
+    def rst_font(id, type):
+        text = id.text
+        selection = id.selection_text
+        if selection:
+            start = id.selection_from
+            end = id.selection_to
+
+            if type == "B":
+                new_text = text[:start] + '*' + selection + '*' + text[end:]
+            if type == "I":
+                new_text = text[:start] + '*' + selection + '*' + text[end:]
+            if type == "H1":
+                string = "=" * len(selection)
+                new_text = text[:start] + string + "\n" + selection + "\n" + string + text[end:]
+            if type == "H2":
+                string = "=" * len(selection)
+                new_text = text[:end] + "\n" + string + text[end:]
+            if type == "H3":
+                string = "-" * len(selection)
+                new_text = text[:end] + "\n" + string + text[end:]
+            if type == "H4":
+                string = "~" * len(selection)
+                new_text = text[:end] + "\n" + string + text[end:]
+
+            id.text = new_text
 
 
 class DeleteFlashCardDeckConfirmationPopup(Popup):

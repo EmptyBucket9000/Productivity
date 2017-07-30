@@ -6,11 +6,6 @@
 ## Flash Cards Screen
 ####################################################################################
 
-<FlashCardDeckStudyScreen>:
-    BoxLayout:
-        orientation: "vertical"
-        TopMenu:
-
 <FlashCardDeckRow@BoxLayout>:
     fc_deck_id: ''
     fc_deck_name: ''
@@ -59,7 +54,7 @@
                 bar_width: dp(10)
                 viewclass: 'FlashCardDeckRow'
                 RecycleBoxLayout:
-                    padding: [10, 0, 10, 0]
+                    padding: [dp(10), 0, dp(10), 0]
                     default_size: None, dp(150)
                     default_size_hint: 1, None
                     size_hint_y: None
@@ -119,7 +114,7 @@
                 bar_width: dp(10)
                 viewclass: 'FlashCardRow'
                 RecycleBoxLayout:
-                    padding: [10, 0, 10, 0]
+                    padding: [dp(10), 0, dp(10), 0]
                     default_size: None, dp(150)
                     default_size_hint: 1, None
                     size_hint_y: None
@@ -139,6 +134,7 @@
                 on_release: lib.Navigation.page_nav(dest='flash_cards', orig='all_flash_cards', edit=False)
 
 <NewFlashCardScreen>:
+    title: 'New Flashcard'
     BoxLayout:
         orientation: "vertical"
         BoxLayout:
@@ -245,7 +241,7 @@
         orientation: "vertical"
         BoxLayout:
             size_hint_y: 0.1
-            padding: 10
+            padding: dp(10)
             orientation: "vertical"
             BoxLayout:
                 Label:
@@ -317,7 +313,7 @@
                     bar_width: dp(10)
                     viewclass: 'FlashCardDeckCardRow'
                     RecycleBoxLayout:
-                        padding: [10, 0, 10, 0]
+                        padding: [dp(10), 0, dp(10), 0]
                         default_size: None, dp(50)
                         default_size_hint: 1, None
                         size_hint_y: None
@@ -325,7 +321,7 @@
                         orientation: 'vertical'
                         spacing: dp(2)
             BoxLayout:
-                padding: [0, 0, 10, 10]
+                padding: [0, 0, dp(10), dp(10)]
                 orientation: "vertical"
                 RstDocument:
                     text: root.data['fc_deck_excerpt'] if 'fc_deck_excerpt' in root.data else ""
@@ -341,13 +337,15 @@
                         text: "Study Deck"
                         on_release: lib.Navigation.page_nav(dest='flash_card_deck_study', orig='flash_card_deck', fc_deck_id=root.fc_deck_id)
 
+
+
 <NewFlashCardDeckScreen>:
     title: "New/Edit Flash Card Deck"
     BoxLayout:
         orientation: "vertical"
         BoxLayout:
             size_hint_y: 0.1
-            padding: 10
+            padding: dp(10)
             orientation: "vertical"
             BoxLayout:
                 Label:
@@ -356,17 +354,61 @@
                 TextInput:
                     text: root.data['fc_deck_name'] if 'fc_deck_name' in root.data else ""
                     padding_y: [self.height / 2.0 - (self.line_height / 2.0) * len(self._lines), 0]
-                    id: new_author_first
+#                    id: new_author_first
                     on_text: root.data['fc_deck_name'] = self.text
         BoxLayout:
-            TextInput:
-                id: new_fc_tag_excerpt
-                multiline: True
-                text: root.data['fc_deck_excerpt'] if 'fc_deck_excerpt' in root.data else ""
-                on_text: root.data['fc_deck_excerpt'] = self.text
-            RstDocument:
-                text: new_fc_tag_excerpt.text
-                show_errors: True
+            orientation: "vertical"
+            BoxLayout:
+                size_hint_y: None
+                height: dp(60)
+                Button:
+                    size_hint: None, None
+                    size: dp(30), dp(30)
+                    text: "B"
+                    bold: True
+                    on_press: lib.RstButtons.rst_font(text_input_1, "B")
+                Button:
+                    size_hint: None, None
+                    size: dp(30), dp(30)
+                    text: "I"
+                    italic: True
+                    on_press: lib.RstButtons.rst_font(text_input_1, "I")
+                Button:
+                    size_hint: None, None
+                    size: dp(30), dp(30)
+                    text: "U"
+                    underline: True
+                    on_press: lib.RstButtons.rst_font(text_input_1, "U")
+                Button:
+                    size_hint: None, None
+                    size: dp(30), dp(30)
+                    text: "H1"
+                    on_press: lib.RstButtons.rst_font(text_input_1, "H1")
+                Button:
+                    size_hint: None, None
+                    size: dp(30), dp(30)
+                    text: "H2"
+                    on_press: lib.RstButtons.rst_font(text_input_1, "H2")
+                Button:
+                    size_hint: None, None
+                    size: dp(30), dp(30)
+                    text: "H2"
+                    on_press: lib.RstButtons.rst_font(text_input_1, "H3")
+                Button:
+                    size_hint: None, None
+                    size: dp(30), dp(30)
+                    text: "H2"
+                    on_press: lib.RstButtons.rst_font(text_input_1, "H4")
+            BoxLayout:
+                TextInput:
+                    id: text_input_1
+                    multiline: True
+                    text: root.data['fc_deck_excerpt'] if 'fc_deck_excerpt' in root.data else ""
+                    on_text: root.data['fc_deck_excerpt'] = self.text
+                RstDocument:
+#                    id: rstdocument
+                    text: text_input_1.text
+                    show_errors: True
         BoxLayout:
             size_hint_y: 0.2
             Button:
@@ -400,3 +442,48 @@
             text: "No, don't delete this card."
             on_release: root.on_close()
 
+<FlashCardDeckStudyScreenBtn@Button>:
+    text_size: self.size
+    halign: 'center'
+    valign: 'middle'
+
+<FlashCardDeckStudyScreen>:
+    BoxLayout:
+        orientation: "vertical"
+        TopMenu:
+        BoxLayout:
+            orientation: "vertical"
+            Label:
+                id: fc_side
+                size_hint_y: 0.1
+                text: root.data['fc_side'] if 'fc_side' in root.data else ""
+            BoxLayout:
+                RstDocument:
+                    id: fc_visible
+                    text: root.data['fc_visible'] if 'fc_visible' in root.data else ""
+                Button:
+                    size_hint_x: None
+                    width: dp(100)
+                    text: "Flip"
+                    on_release: root.on_flip_card()
+            BoxLayout:
+                size_hint_y: None
+                height: dp(50)
+                FlashCardDeckStudyScreenBtn:
+                    text: "Very Easy\n" + root.data['very_easy'] + " Day(s)" if 'very_easy' in root.data else "Very Easy"
+                    on_release: root.on_complete(1)
+                FlashCardDeckStudyScreenBtn:
+                    text: "Easy\n" + root.data['easy'] + " Day(s)" if 'easy' in root.data else "Easy"
+                    on_release: root.on_complete(2)
+                FlashCardDeckStudyScreenBtn:
+                    text: "Normal\n" + root.data['normal'] + " Day(s)" if 'normal' in root.data else "Normal"
+                    on_release: root.on_complete(3)
+                FlashCardDeckStudyScreenBtn:
+                    text: "Hard\n" + root.data['hard'] + " Day(s)" if 'hard' in root.data else "Hard"
+                    on_release: root.on_complete(4)
+                FlashCardDeckStudyScreenBtn:
+                    text: "Very Hard\n" + root.data['very_hard'] + " Day(s)" if 'very_hard' in root.data else "Very Hard"
+                    on_release: root.on_complete(5)
+                FlashCardDeckStudyScreenBtn:
+                    text: "Study Again\nToday"
+                    on_release: root.on_complete(10)

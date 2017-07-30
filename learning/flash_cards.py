@@ -7,9 +7,9 @@ from kivy.uix.popup import Popup
 from kivy.properties import DictProperty
 from shutil import copyfile
 from kivy.properties import ListProperty, ObjectProperty
-import sqlite3
+import sqlite3, datetime, math
 
-conn = sqlite3.connect("./Assets/db_productivity.sqlite3")
+conn = sqlite3.connect("./Assets/db_productivity.sqlite3", detect_types=sqlite3.PARSE_DECLTYPES)
 conn.execute('pragma foreign_keys=on')
 c = conn.cursor()
 
@@ -33,14 +33,83 @@ class FlashCardDeckStudyScreen(Screen):
     data = DictProperty({})
 
     def on_parent(self, widget, parent):
-        gd = App.get_running_app()
         from random import shuffle
+        gd = App.get_running_app()
         self.fc_deck_id = gd.glob_dict['fc_deck_id']
-        fc_list = Queries.get_fc_list(deck_id=self.fc_deck_id, data=True, study=False)
-        shuffle(fc_list)
-        # self.data['fc_id'] = fc_
-        # self.data['fc_title'] =
+        # [0:fc_id, 1:fc_title, 2:fc_front, 3:fc_back, 4:fc_difficulty, 5:fc_level, 6:fc_prev_date, 7:fc_next_date]
+        self.fc_list = Queries.get_fc_list(deck_id=self.fc_deck_id, data=True, study=True)
+        if self.fc_list:
+            self.diff_dict = {1: 2, 2: 1.6, 3: 1.2, 4: 0.8, 5: 0.4, 10: 1.0}
+            shuffle(self.fc_list)
+            self.i = 0
+            self.load_data()
+        else:
+            Navigation.page_nav(dest='flash_cards', prev='flash_cards')
 
+    def on_complete(self, difficulty):
+        gd = App.get_running_app()
+        # new_time_diff = self.time_diff.total_seconds() * self.diff_dict[difficulty]
+        # new_time_diff = 86400 if new_time_diff == 0 else new_time_diff
+        new_time_diff = self.get_new_time_diff(difficulty)
+        fc_next_date = self.fc_next_date + datetime.timedelta(seconds=new_time_diff)
+
+        if difficulty == 10:
+            self.fc_list.append(self.fc_list[self.i])
+            self.i += 1
+            self.load_data()
+        else:
+            now = datetime.datetime.utcnow()
+            c.execute("""
+                        UPDATE  `tbl_learning_flash_cards`
+                        SET     `fc_prev_date` = '{fpd}',
+                        SET     `fc_next_date` = '{fnd}',
+                                `fc_difficulty` = '{fd}'
+                        WHERE   `fc_id` = '{fcid}'
+                    """.format(fnd=fc_next_date, fpd=now, fd=difficulty, fcid=self.data['fc_id']))
+            conn.commit()
+            self.i += 1
+            if self.i == self.num_cards:
+                self.i = 0
+                gd.glob_dict['alert'] = "You have completed today's cards."
+                Navigation.page_nav(dest='flash_cards', prev='flash_cards')
+            else:
+                self.load_data()
+
+    def load_data(self):
+        self.num_cards = len(self.fc_list)
+        self.data['fc_id'] = self.fc_list[self.i][0]
+        self.data['fc_title'] = self.fc_list[self.i][1]
+        self.fc_front = self.fc_list[self.i][2]
+        self.fc_back = self.fc_list[self.i][3]
+        self.data['fc_difficulty'] = self.fc_list[self.i][4]
+        self.data['fc_level'] = self.fc_list[self.i][5]
+        self.fc_prev_date = datetime.datetime.strptime(self.fc_list[self.i][6], "%Y-%m-%d %H:%M:%S.%f")
+        self.fc_next_date = datetime.datetime.strptime(self.fc_list[self.i][7], "%Y-%m-%d %H:%M:%S.%f")
+        self.data['fc_side'] = "Front"
+        self.data['fc_visible'] = self.fc_front
+        self.time_diff = self.fc_next_date - self.fc_prev_date
+        self.data['very_easy'] = str(self.get_new_time_diff(1, day=True))
+        self.data['easy'] = str(self.get_new_time_diff(2, day=True))
+        self.data['normal'] = str(self.get_new_time_diff(3, day=True))
+        self.data['hard'] = str(self.get_new_time_diff(4, day=True))
+        self.data['very_hard'] = str(self.get_new_time_diff(5, day=True))
+
+    def get_new_time_diff(self, difficulty, **kwargs):
+        value = self.time_diff.total_seconds() * self.diff_dict[difficulty] if self.time_diff.total_seconds() > 0 else 86400
+        if 'day' in kwargs:
+            value = round(value / 86400)
+            if value == 0:
+                value = 1
+        return value
+
+    def on_flip_card(self):
+        if self.data['fc_side'] == 'Front':
+            self.data['fc_side'] = 'Back'
+            self.data['fc_visible'] = self.fc_back
+
+        elif self.data['fc_side'] == 'Back':
+            self.data['fc_side'] = 'Front'
+            self.data['fc_visible'] = self.fc_front
 
 class AllFlashCardsScreen(Screen):
     data = DictProperty({})
@@ -219,12 +288,12 @@ class NewFlashCardScreen(Screen):
             self.fc_id = gd.glob_dict['fc_id']
             try:
                 c.execute("""
-                            UPDATE `tbl_learning_flash_cards`
-                            SET `fc_title` = '{ft}',
-                                `fc_front` = '{ff}',
-                                `fc_back` = '{fb}',
-                                `fc_difficulty` = '{l}'
-                            WHERE `fc_id` = '{fcid}'
+                            UPDATE  `tbl_learning_flash_cards`
+                            SET     `fc_title` = '{ft}',
+                                    `fc_front` = '{ff}',
+                                    `fc_back` = '{fb}',
+                                    `fc_difficulty` = '{l}'
+                            WHERE   `fc_id` = '{fcid}'
                         """.format(ft=title, ff=front, fb=back, l=difficulty, fcid=self.fc_id))
                 conn.commit()
             except sqlite3.Error as e:
@@ -232,11 +301,13 @@ class NewFlashCardScreen(Screen):
             gd.glob_dict['edit'] = False
         else:
             self.fc_id = MiscFuns.get_id(16)
+            now = datetime.datetime.utcnow()
             try:
                 c.execute("""
-                            INSERT INTO `tbl_learning_flash_cards` (`fc_id`,`fc_title`,`fc_front`,`fc_back`,`fc_difficulty`)
-                            VALUES (?,?,?,?,?)
-                        """, (self.fc_id, title, front, back, difficulty))
+                            INSERT INTO `tbl_learning_flash_cards` (`fc_id`,`fc_title`,`fc_front`,`fc_back`,
+                                        `fc_difficulty`,`fc_prev_date`,`fc_next_date`)
+                            VALUES (?,?,?,?,?,?,?)
+                        """, (self.fc_id, title, front, back, difficulty, now, now))
                 conn.commit()
             except sqlite3.Error as e:
                 print("An error occurred:", e.args[0])

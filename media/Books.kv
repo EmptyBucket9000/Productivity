@@ -35,8 +35,8 @@
         orientation: "vertical"
         TopMenu:
         BoxLayout:
-            padding: 10
-            spacing: 10
+            padding: dp(10)
+            spacing: dp(10)
             orientation: "vertical"
             BoxLayout:
                 default_size_hint: 1, None
@@ -71,7 +71,7 @@
                     orientation: 'vertical'
                     spacing: dp(2)
         BoxLayout:
-            padding: 10
+            padding: dp(10)
             Button:
                 size_hint: 1, None
                 height: '50dp'
@@ -113,7 +113,7 @@
 <BookInfo@Label>:
     text_size: root.width, None
     size: self.texture_size
-    padding: 10, 10
+    padding: dp(10), dp(10)
     canvas.before:
         Color:
             rgba: 0.5, 0.5, 0.5, 1
@@ -147,11 +147,11 @@
         TopMenu:
         BoxLayout:
             orientation: "horizontal"
-            spacing: 10
-            padding: [0, 10, 0, 0]
+            spacing: dp(10)
+            padding: [0, dp(10), 0, 0]
             BoxLayout:
-                padding: 10
-                spacing: 10
+                padding: dp(10)
+                spacing: dp(10)
                 orientation: "vertical"
                 size_hint_x: None
                 width: 544
@@ -163,7 +163,7 @@
                         pos: self.pos
                 BoxLayout:
                     size_hint_y: 0.1
-                    spacing: 10
+                    spacing: dp(10)
                     Button:
                         size_hint_x: None
                         width: 97
@@ -184,7 +184,7 @@
 
                 BoxLayout:
                     size_hint_y: None
-                    spacing: 10
+                    spacing: dp(10)
                     height: 324
                     BoxLayout:
                         size_hint: None, None
@@ -219,7 +219,7 @@
                 ScrollView:
                     BoxLayout:
                         size_hint: None, None
-                        size: self.parent.width - 10, self.minimum_height
+                        size: self.parent.width - dp(10), self.minimum_height
                         Label:
                             text: root.notes
                             text_size: self.width, None
@@ -246,7 +246,7 @@
                             spacing: dp(10)
 
                 BoxLayout:
-                    padding: [0,10,10,10]
+                    padding: [0,dp(10),dp(10),dp(10)]
                     size_hint_y: 0.1
                     Button:
                         text: "Add Note"
@@ -266,12 +266,12 @@
     orientation: "vertical"
     BoxLayout:
         orientation: "vertical"
-        spacing: 10
-        padding: [0,0,10,0]
+        spacing: dp(10)
+        padding: [0,0,dp(10),0]
         size_hint_y: 1
         BoxLayout:
             size_hint_y: 0.2
-            spacing: 10
+            spacing: dp(10)
             BoxLayout:
                 canvas.before:
                     Color:
@@ -287,7 +287,7 @@
                     text: "Delete Note"
                     on_release: App.books.BookScreen.confirm_book_note_delete(root.note_id)
         BoxLayout:
-            spacing: 10
+            spacing: dp(10)
             RstDocument:
                 text: root.note_excerpt
             BoxLayout:
@@ -341,7 +341,7 @@
     text_size: self.size
     halign: 'right'
     valign: 'middle'
-    padding_x: 10
+    padding_x: dp(10)
 
 <NewBookScreen>:
     prev_page: ''
@@ -354,7 +354,6 @@
     r: '0.5'
     BoxLayout:
         orientation: "vertical"
-        TopMenu:
         BoxLayout:
             id: new_book_insert_status_box
             canvas.before:
@@ -369,7 +368,7 @@
                 id: new_book_insert_status
                 text: ""
         BoxLayout:
-            padding: [10, 0, 10, 10]
+            padding: [dp(10), 0, dp(10), dp(10)]
             orientation: "vertical"
             NewBookFormRow:
                 Label:
@@ -646,11 +645,11 @@
     text_size: self.size
     valign: 'middle'
     halign: 'right'
-    padding_x: 10
+    padding_x: dp(10)
 
 <NewAuthorTextInput@TextInput>:
     multiline: False
-    font_size: 18
+    font_size: sp(18)
     input_filter: (lambda text, from_undo: text[:50 - len(self.text)])
     padding_y: ( self.height - self.line_height ) / 2
 
@@ -661,11 +660,11 @@
             size_hint_y: 0.2
             text_size: self.text_size
             valign: 'middle'
-            font_size: 24
+            font_size: sp(24)
             text: "New/Edit Author"
         BoxLayout:
             size_hint_y: 0.3
-            padding: 10
+            padding: dp(10)
             orientation: "vertical"
             NewAuthorRow:
                 NewAuthorLabel:
@@ -706,11 +705,11 @@
     text_size: self.size
     valign: 'middle'
     halign: 'right'
-    padding_x: 10
+    padding_x: dp(10)
 
 <NewPublisherTextInput@TextInput>:
     multiline: False
-    font_size: 18
+    font_size: sp(18)
     input_filter: (lambda text, from_undo: text[:50 - len(self.text)])
     padding_y: ( self.height - self.line_height ) / 2
 
@@ -721,11 +720,11 @@
             size_hint_y: 0.2
             text_size: self.text_size
             valign: 'middle'
-            font_size: 24
+            font_size: sp(24)
             text: "New/Edit Publisher"
         BoxLayout:
             size_hint_y: 0.3
-            padding: 10
+            padding: dp(10)
             orientation: "vertical"
             NewPublisherRow:
                 NewPublisherLabel:
