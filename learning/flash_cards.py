@@ -1,13 +1,19 @@
 from kivy.app import App
 from kivy.uix.screenmanager import Screen
-from App.lib import Queries
-from App.lib import Navigation
-from App.lib import MiscFuns
+from kivy.graphics.texture import Texture
+from kivy.core.image import Image as CoreImage
+from kivy.uix.image import Image
+from kivy.graphics.instructions import InstructionGroup
+from kivy.uix.stencilview import StencilView
+from kivy.graphics import Color, Ellipse, Line, Rectangle
+from lib import Queries
+from lib import Navigation
+from lib import MiscFuns
 from kivy.uix.popup import Popup
 from kivy.properties import DictProperty
 from shutil import copyfile
 from kivy.properties import ListProperty, ObjectProperty
-import sqlite3, datetime, math
+import sqlite3, datetime, math, io, sys
 
 conn = sqlite3.connect("./Assets/db_productivity.sqlite3", detect_types=sqlite3.PARSE_DECLTYPES)
 conn.execute('pragma foreign_keys=on')
@@ -36,7 +42,6 @@ class FlashCardDeckStudyScreen(Screen):
         from random import shuffle
         gd = App.get_running_app()
         self.fc_deck_id = gd.glob_dict['fc_deck_id']
-        # [0:fc_id, 1:fc_title, 2:fc_front, 3:fc_back, 4:fc_difficulty, 5:fc_level, 6:fc_prev_date, 7:fc_next_date]
         self.fc_list = Queries.get_fc_list(deck_id=self.fc_deck_id, data=True, study=True)
         if self.fc_list:
             self.diff_dict = {1: 2, 2: 1.6, 3: 1.2, 4: 0.8, 5: 0.4, 10: 1.0}
@@ -62,7 +67,7 @@ class FlashCardDeckStudyScreen(Screen):
             c.execute("""
                         UPDATE  `tbl_learning_flash_cards`
                         SET     `fc_prev_date` = '{fpd}',
-                        SET     `fc_next_date` = '{fnd}',
+                                `fc_next_date` = '{fnd}',
                                 `fc_difficulty` = '{fd}'
                         WHERE   `fc_id` = '{fcid}'
                     """.format(fnd=fc_next_date, fpd=now, fd=difficulty, fcid=self.data['fc_id']))
@@ -76,17 +81,22 @@ class FlashCardDeckStudyScreen(Screen):
                 self.load_data()
 
     def load_data(self):
+        # [0:fc_id, 1:fc_title, 2:fc_front_txt, 3:fc_front_image, 4:fc_back_txt, 5:fc_back_image,
+        # 6:fc_difficulty, 7:fc_level, 8:fc_prev_date, 9:fc_next_date]
         self.num_cards = len(self.fc_list)
         self.data['fc_id'] = self.fc_list[self.i][0]
         self.data['fc_title'] = self.fc_list[self.i][1]
-        self.fc_front = self.fc_list[self.i][2]
-        self.fc_back = self.fc_list[self.i][3]
-        self.data['fc_difficulty'] = self.fc_list[self.i][4]
-        self.data['fc_level'] = self.fc_list[self.i][5]
-        self.fc_prev_date = datetime.datetime.strptime(self.fc_list[self.i][6], "%Y-%m-%d %H:%M:%S.%f")
-        self.fc_next_date = datetime.datetime.strptime(self.fc_list[self.i][7], "%Y-%m-%d %H:%M:%S.%f")
+        self.fc_front_text = self.fc_list[self.i][2]
+        self.fc_front_image = self.fc_list[self.i][3]
+        self.fc_back_text = self.fc_list[self.i][4]
+        self.fc_back_image = self.fc_list[self.i][5]
+        self.data['fc_difficulty'] = self.fc_list[self.i][6]
+        self.data['fc_level'] = self.fc_list[self.i][7]
+        self.fc_prev_date = datetime.datetime.strptime(self.fc_list[self.i][8], "%Y-%m-%d %H:%M:%S.%f")
+        self.fc_next_date = datetime.datetime.strptime(self.fc_list[self.i][9], "%Y-%m-%d %H:%M:%S.%f")
         self.data['fc_side'] = "Front"
-        self.data['fc_visible'] = self.fc_front
+        self.data['fc_visible_text'] = self.fc_front_text
+        self.data['fc_visible_image'] = self.fc_front_image
         self.time_diff = self.fc_next_date - self.fc_prev_date
         self.data['very_easy'] = str(self.get_new_time_diff(1, day=True))
         self.data['easy'] = str(self.get_new_time_diff(2, day=True))
@@ -105,11 +115,13 @@ class FlashCardDeckStudyScreen(Screen):
     def on_flip_card(self):
         if self.data['fc_side'] == 'Front':
             self.data['fc_side'] = 'Back'
-            self.data['fc_visible'] = self.fc_back
+            self.data['fc_visible_text'] = self.fc_back_text
+            self.data['fc_visible_image'] = self.fc_back_image
 
         elif self.data['fc_side'] == 'Back':
             self.data['fc_side'] = 'Front'
-            self.data['fc_visible'] = self.fc_front
+            self.data['fc_visible_text'] = self.fc_front_text
+            self.data['fc_visible_image'] = self.fc_front_image
 
 class AllFlashCardsScreen(Screen):
     data = DictProperty({})
@@ -261,14 +273,21 @@ class NewFlashCardScreen(Screen):
             self.data['fc_tags'] = self.fc_tags
             self.data['fc_decks'] = self.fc_decks
             self.data['fc_title'] = fc_data[0]
-            self.data['fc_front'] = fc_data[1] if fc_data[1] else ""
-            self.data['fc_back'] = fc_data[2] if fc_data[2] else ""
-            self.data['fc_difficulty'] = fc_data[3]
+            self.data['fc_front_text'] = fc_data[1] if fc_data[1] else ""
+            self.data['fc_back_text'] = fc_data[2] if fc_data[2] else ""
+            self.data['fc_front_image'] = fc_data[3] if fc_data[3] else ""
+            # self.data['fc_front_image_t'] = Texture.blit_data(self.data['fc_front_image'])
+            self.data['fc_front_image_t'] = Image(source="self.data['fc_front_image']").texture
+            print(self.data['fc_front_image_t'])
+            self.data['fc_back_image'] = fc_data[4] if fc_data[4] else ""
+            self.data['fc_difficulty'] = fc_data[5]
         else:
             self.data = {}
             self.data['fc_title'] = ""
-            self.data['fc_front'] = ""
-            self.data['fc_back'] = ""
+            self.data['fc_front_text'] = ""
+            self.data['fc_back_text'] = ""
+            self.data['fc_front_image'] = ""
+            self.data['fc_back_image'] = ""
             self.data['fc_difficulty'] = ""
             if 'fc_tags' in self.data:
                 del self.data['fc_tags']
@@ -277,37 +296,49 @@ class NewFlashCardScreen(Screen):
     def get_spinner_lists(self):
         pass
 
-    def on_submit(self, data):
+    def on_submit(self, data, fc_front_for_saving, fc_back_for_saving, fc_front_draw):
         gd = App.get_running_app()
-        self.data['orig'] = gd.glob_dict['orig']
-        title = data['fc_title'] if 'fc_title' in data else " "
-        front = data['fc_front'] if 'fc_front' in data else " "
-        back = data['fc_back'] if 'fc_back' in data else " "
-        difficulty = data['fc_difficulty'] if 'fc_difficulty' in data else 0
         if gd.glob_dict['edit']:
             self.fc_id = gd.glob_dict['fc_id']
+        else:
+            self.fc_id = MiscFuns.get_id(16)
+        self.data['orig'] = gd.glob_dict['orig']
+        title = data['fc_title'] if 'fc_title' in data else " "
+        front_text = data['fc_front_text'] if 'fc_front_text' in data else " "
+        back_text = data['fc_back_text'] if 'fc_back_text' in data else " "
+        # front_image = data['fc_front_image'] if 'fc_front_image' in data else " "
+        # back_image = data['fc_back_image'] if 'fc_back_image' in data else " "
+        difficulty = data['fc_difficulty'] if 'fc_difficulty' in data else 0
+        fc_front_file = "learning/flash_card_images/{t}_({fcid})_front.png".format(t=title, fcid=self.fc_id)
+        fc_back_file = "learning/flash_card_images/{t}_({fcid})_back.png".format(t=title, fcid=self.fc_id)
+        fc_front_for_saving.export_to_png(fc_front_file)
+        fc_back_for_saving.export_to_png(fc_back_file)
+        # except:
+        #     print("Error saving drawn images to file.")
+        if gd.glob_dict['edit']:
             try:
                 c.execute("""
                             UPDATE  `tbl_learning_flash_cards`
                             SET     `fc_title` = '{ft}',
-                                    `fc_front` = '{ff}',
-                                    `fc_back` = '{fb}',
+                                    `fc_front_text` = '{fft}',
+                                    `fc_back_text` = '{fbt}',
                                     `fc_difficulty` = '{l}'
                             WHERE   `fc_id` = '{fcid}'
-                        """.format(ft=title, ff=front, fb=back, l=difficulty, fcid=self.fc_id))
+                        """.format(ft=title, fft=front_text, fbt=back_text, ffi=fc_front_file, fbi=fc_back_file,
+                                   l=difficulty, fcid=self.fc_id))
                 conn.commit()
             except sqlite3.Error as e:
                 print("An error occurred:", e.args[0])
             gd.glob_dict['edit'] = False
         else:
-            self.fc_id = MiscFuns.get_id(16)
             now = datetime.datetime.utcnow()
             try:
                 c.execute("""
-                            INSERT INTO `tbl_learning_flash_cards` (`fc_id`,`fc_title`,`fc_front`,`fc_back`,
-                                        `fc_difficulty`,`fc_prev_date`,`fc_next_date`)
-                            VALUES (?,?,?,?,?,?,?)
-                        """, (self.fc_id, title, front, back, difficulty, now, now))
+                            INSERT INTO `tbl_learning_flash_cards` (`fc_id`,`fc_title`,`fc_front_text`,`fc_back_text`,
+                                        `fc_front_image`,`fc_back_image`,`fc_difficulty`,`fc_prev_date`,`fc_next_date`)
+                            VALUES (?,?,?,?,?,?,?,?,?)
+                        """, (self.fc_id, title, front_text, back_text, fc_front_file, fc_back_file, difficulty, now,
+                              now))
                 conn.commit()
             except sqlite3.Error as e:
                 print("An error occurred:", e.args[0])
@@ -335,8 +366,6 @@ class NewFlashCardScreen(Screen):
                     conn.commit()
                 except sqlite3.Error as e:
                     print("An error occurred:", e.args[0])
-
-        # self.data.clear()
         data.clear()
         self.data.clear()
         self.data_fc_tag_ids.clear()
@@ -385,3 +414,54 @@ class NewFlashCardTagScreen(Screen):
         gd.glob_dict['edit'] = False
         conn.commit()
         Navigation.page_nav(dest=self.data['orig'], orig='flash_cards', edit=False)
+
+class PlaySpace(Screen):
+    pass
+
+class DrawSpace(StencilView):
+
+    def on_touch_down(self, touch):
+        gd = App.get_running_app()
+
+        try:
+            self.c = [gd.glob_dict['r'], gd.glob_dict['g'], gd.glob_dict['b'], gd.glob_dict['a']]
+        except:
+            self.c = [0, 0, 0, 1]
+        try:
+            self.line_width = gd.glob_dict['line_width']
+        except:
+            self.line_width = 1.5
+        ud = touch.ud
+        if 'pressure' in touch.profile:
+            ud['pressure'] = touch.pressure
+            self.line_width = (touch.pressure * 100000) ** 2
+
+        # with self.ids['cid'].canvas:
+        with self.canvas:
+            Color(self.c[0], self.c[1], self.c[2], self.c[3])
+            ud['line'] = Line(points=(touch.x, touch.y), width=self.line_width)
+
+    def on_touch_move(self, touch):
+        ud = touch.ud
+        ud['line'].points += [touch.x, touch.y]
+
+        # if pressure changed create a new point instruction
+        if 'pressure' in ud:
+            if not .95 < (touch.pressure / ud['pressure']) < 1.05:
+                self.line_width = (touch.pressure * 100000) ** 2
+                with self.canvas:
+                    Color(self.c[0], self.c[1], self.c[2], self.c[3])
+                    ud['line'] = Line(points=(touch.x, touch.y), width=self.line_width)
+
+    @staticmethod
+    def set_color(rgba):
+        gd = App.get_running_app()
+        gd.glob_dict['r'] = rgba[0]
+        gd.glob_dict['g'] = rgba[1]
+        gd.glob_dict['b'] = rgba[2]
+        gd.glob_dict['a'] = rgba[3]
+
+    @staticmethod
+    def set_line_width(line_width):
+        gd = App.get_running_app()
+        gd.glob_dict['line_width'] = line_width

@@ -1,6 +1,7 @@
 #: kivy 1.10.0
 #: import lib lib
 #: import main main
+#: import playground playground
 
 ####################################################################################
 ## Flash Cards Screen
@@ -137,6 +138,8 @@
     title: 'New Flashcard'
     BoxLayout:
         orientation: "vertical"
+        padding: 10
+        ColorBar:
         BoxLayout:
             size_hint_y: 0.1
             Label:
@@ -150,11 +153,6 @@
                 padding_y: [self.height / 2.0 - (self.line_height / 2.0) * len(self._lines), 0]
                 text: root.data['fc_title'] if 'fc_title' in root.data else ""
                 on_text: root.data['fc_title'] = self.text
-            Label:
-                size_hint_x: 0.2
-                text: "Difficulty"
-                text_size: self.text_size
-                valign: 'middle'
         BoxLayout:
             size_hint_y: 0.1
             Label:
@@ -172,13 +170,6 @@
                     size_hint_x: 0.3
                     text: "New Tag"
                     on_release: lib.Navigation.page_nav(dest='new_flash_card_tag', orig='new_flash_card', edit=False)
-            BoxLayout:
-                size_hint_x: 0.2
-                TextInput:
-                    padding_y: [self.height / 2.0 - (self.line_height / 2.0) * len(self._lines), 0]
-                    id: new_fc_difficulty
-                    text: root.data['fc_difficulty'] if 'fc_difficulty' in root.data else "0"
-                    on_text: root.data['fc_difficulty'] = self.text
         BoxLayout:
             size_hint_y: 0.1
             Label:
@@ -196,36 +187,103 @@
                     size_hint_x: 0.3
                     text: "New Deck"
                     on_release: lib.Navigation.page_nav(dest='new_flash_card_deck', orig='new_flash_card', edit=False)
-            BoxLayout:
-                size_hint_x: 0.2
         BoxLayout:
             orientation: "vertical"
-            Label:
+            BoxLayout:
                 size_hint_y: 0.1
-                text: "Card Front"
+                FloatLayout:
+                    Label:
+                        pos: self.parent.pos
+                        size_hint: None, None
+                        size: (self.parent.width, self.parent.height)
+                        text: "Card Front"
+                    Button:
+                        size_hint: None, None
+                        width: dp(200)
+                        height: self.parent.height
+                        pos: self.parent.pos
+                        text: "Clear Front Drawings"
+                        on_release: fc_front_draw.canvas.clear()
             BoxLayout:
                 TextInput:
                     id: new_fc_front
                     multiline: True
-                    text: root.data['fc_front'] if 'fc_front' in root.data else ""
-                    on_text: root.data['fc_front'] = self.text
-                RstDocument:
-                    text: new_fc_front.text
-                    show_errors: True
+                    text: root.data['fc_front_text'] if 'fc_front_text' in root.data else ""
+                    on_text: root.data['fc_front_text'] = self.text
+                FloatLayout:
+                    RstDocument:
+                        pos: self.parent.pos
+                        text: new_fc_front.text
+                        show_errors: True
+                        canvas.before:
+                            Rectangle:
+                                size: self.parent.size
+                                pos: self.parent.pos
+                                source: root.data['fc_front_image'] if 'fc_front_image' in root.data else ""
+                    BoxLayout:
+                        pos: self.parent.pos
+                        size: self.parent.size
+                        BoxLayout:
+                            id: fc_front_for_saving
+                            size_hint: None, None
+                            size: self.parent.size
+                            DrawSpace:
+                                id: fc_front_draw
+                                StencilView:
+                                    size_hint: None, None
+                                    size: self.parent.size
         BoxLayout:
             orientation: "vertical"
-            Label:
-                size_hint_y: 0.1
-                text: "Card Back"
             BoxLayout:
+                size_hint_y: 0.1
+                FloatLayout:
+                    Label:
+                        pos: self.parent.pos
+                        size_hint: None, None
+                        size: (self.parent.width, self.parent.height)
+                        text: "Card Back"
+                    Button:
+                        size_hint: None, None
+                        width: dp(200)
+                        height: self.parent.height
+                        pos: self.parent.pos
+                        text: "Clear Back Drawings"
+                        on_release: fc_back_draw.canvas.clear()
+            BoxLayout:
+                canvas:
+                    Color:
+                        rgba: (1, 1, 1, 1)
+                    Rectangle:
+                        pos: self.parent.pos
+                        size: self.parent.size
                 TextInput:
                     id: new_fc_back
                     multiline: True
-                    text: root.data['fc_back'] if 'fc_back' in root.data else ""
-                    on_text: root.data['fc_back'] = self.text
-                RstDocument:
-                    text: new_fc_back.text
-                    show_errors: True
+                    text: root.data['fc_back_text'] if 'fc_back_text' in root.data else ""
+                    on_text: root.data['fc_back_text'] = self.text
+                FloatLayout:
+                    RstDocument:
+                        pos: self.parent.pos
+                        text: new_fc_back.text
+                        show_errors: True
+                        canvas.before:
+                            Rectangle:
+                                size: self.parent.size
+                                pos: self.parent.pos
+                                source: root.data['fc_back_image'] if 'fc_back_image' in root.data else ""
+                    BoxLayout:
+                        pos: self.parent.pos
+                        size: self.parent.size
+                        BoxLayout:
+                            id: fc_back_for_saving
+                            size_hint: None, None
+                            size: self.parent.size
+                            DrawSpace:
+                                id: fc_back_draw
+                                StencilView:
+                                    size_hint: None, None
+                                    size: self.parent.size
+                                    canvas:
         BoxLayout:
             size_hint_y: 0.2
             Button:
@@ -233,7 +291,7 @@
                 on_release: lib.Navigation.page_nav(dest='flash_cards', orig='new_flash_card', edit=False)
             Button:
                 text: "Submit"
-                on_release: root.dispatch('on_submit', root.data)
+                on_release: root.dispatch('on_submit', root.data, fc_front_for_saving, fc_back_for_saving, fc_front_draw)
 
 <NewFlashCardTagScreen>:
     title: "New/Edit Flash Card Tag"
@@ -359,47 +417,6 @@
         BoxLayout:
             orientation: "vertical"
             BoxLayout:
-                size_hint_y: None
-                height: dp(60)
-                Button:
-                    size_hint: None, None
-                    size: dp(30), dp(30)
-                    text: "B"
-                    bold: True
-                    on_press: lib.RstButtons.rst_font(text_input_1, "B")
-                Button:
-                    size_hint: None, None
-                    size: dp(30), dp(30)
-                    text: "I"
-                    italic: True
-                    on_press: lib.RstButtons.rst_font(text_input_1, "I")
-                Button:
-                    size_hint: None, None
-                    size: dp(30), dp(30)
-                    text: "U"
-                    underline: True
-                    on_press: lib.RstButtons.rst_font(text_input_1, "U")
-                Button:
-                    size_hint: None, None
-                    size: dp(30), dp(30)
-                    text: "H1"
-                    on_press: lib.RstButtons.rst_font(text_input_1, "H1")
-                Button:
-                    size_hint: None, None
-                    size: dp(30), dp(30)
-                    text: "H2"
-                    on_press: lib.RstButtons.rst_font(text_input_1, "H2")
-                Button:
-                    size_hint: None, None
-                    size: dp(30), dp(30)
-                    text: "H2"
-                    on_press: lib.RstButtons.rst_font(text_input_1, "H3")
-                Button:
-                    size_hint: None, None
-                    size: dp(30), dp(30)
-                    text: "H2"
-                    on_press: lib.RstButtons.rst_font(text_input_1, "H4")
-            BoxLayout:
                 TextInput:
                     id: text_input_1
                     multiline: True
@@ -459,8 +476,13 @@
                 text: root.data['fc_side'] if 'fc_side' in root.data else ""
             BoxLayout:
                 RstDocument:
+                    canvas:
+                        Rectangle:
+                            source: root.data['fc_visible_image'] if 'fc_visible_image' in root.data else ""
+                            size: self.size
+                            pos: self.pos
                     id: fc_visible
-                    text: root.data['fc_visible'] if 'fc_visible' in root.data else ""
+                    text: root.data['fc_visible_text'] if 'fc_visible_text' in root.data else ""
                 Button:
                     size_hint_x: None
                     width: dp(100)
@@ -487,3 +509,61 @@
                 FlashCardDeckStudyScreenBtn:
                     text: "Study Again\nToday"
                     on_release: root.on_complete(10)
+
+
+<ColorBar@BoxLayout>:
+    size_hint_y: None
+    height: dp(50)
+    ToggleButton:
+        group: 'line_width'
+        text: "Thin"
+        on_release: playground.DrawSpace.set_line_width(line_width=1)
+    ToggleButton:
+        group: 'line_width'
+        text: "Normal"
+        on_release: playground.DrawSpace.set_line_width(line_width=1.5)
+    ToggleButton:
+        group: 'line_width'
+        text: "Thick"
+        on_release: playground.DrawSpace.set_line_width(line_width=2.25)
+    ToggleButton:
+        group: 'line_width'
+        text: "Very Thick"
+        on_release: playground.DrawSpace.set_line_width(line_width=3)
+    ToggleButton:
+        group: 'color'
+        state: 'down'
+        on_release: playground.DrawSpace.set_color(rgba=[0,0,0,1])
+        canvas:
+            Color:
+                rgba: 0, 0, 0, 1
+            Rectangle:
+                size: (self.width, self.height/2)
+                pos: self.pos
+    ToggleButton:
+        group: 'color'
+        on_release: playground.DrawSpace.set_color(rgba=[1,0,0,1])
+        canvas:
+            Color:
+                rgba: 1, 0, 0, 1
+            Rectangle:
+                size: (self.width, self.height/2)
+                pos: self.pos
+    ToggleButton:
+        group: 'color'
+        on_release: playground.DrawSpace.set_color(rgba=[0,1,0,1])
+        canvas:
+            Color:
+                rgba: 0, 1, 0, 1
+            Rectangle:
+                size: (self.width, self.height/2)
+                pos: self.pos
+    ToggleButton:
+        group: 'color'
+        on_release: playground.DrawSpace.set_color(rgba=[0,0,1,1])
+        canvas:
+            Color:
+                rgba: 0, 0, 1, 1
+            Rectangle:
+                size: (self.width, self.height/2)
+                pos: self.pos

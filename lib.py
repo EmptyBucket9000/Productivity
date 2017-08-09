@@ -1,8 +1,9 @@
 from kivy.app import App
 from kivy.uix.floatlayout import FloatLayout
+from kivy.uix.widget import Widget
 from kivy.properties import ObjectProperty
 from kivy.uix.popup import Popup
-import string, random, sqlite3
+import string, random, sqlite3, os
 
 conn = sqlite3.connect("./Assets/db_productivity.sqlite3", detect_types=sqlite3.PARSE_DECLTYPES)
 conn.execute('pragma foreign_keys=on')
@@ -78,7 +79,8 @@ class Queries:
 
         command = "SELECT `tbl_learning_flash_cards`.`fc_id`,`tbl_learning_flash_cards`.`fc_title`"
         if data:
-            command += ",`tbl_learning_flash_cards`.`fc_front`,`tbl_learning_flash_cards`.`fc_back`"
+            command += ",`tbl_learning_flash_cards`.`fc_front_text`,`tbl_learning_flash_cards`.`fc_front_image`"
+            command += ",`tbl_learning_flash_cards`.`fc_back_text`,`tbl_learning_flash_cards`.`fc_back_image`"
             command += ",`tbl_learning_flash_cards`.`fc_difficulty`,`tbl_learning_flash_cards`.`fc_level`"
             command += ",`tbl_learning_flash_cards`.`fc_prev_date` AS '[timestamp]',`tbl_learning_flash_cards`.`fc_next_date` AS '[timestamp]'"
         command += "FROM `tbl_learning_flash_cards`"
@@ -107,7 +109,7 @@ class Queries:
     @staticmethod
     def get_fc_data(fc_id):
         c.execute("""
-                    SELECT  `fc_title`,`fc_front`,`fc_back`,`fc_difficulty`
+                    SELECT  `fc_title`,`fc_front_text`,`fc_back_text`,`fc_front_image`,`fc_back_image`,`fc_difficulty`
                     FROM    `tbl_learning_flash_cards`
                     WHERE   `fc_id` = '{fcid}'
                 """.format(fcid=fc_id))
@@ -411,6 +413,16 @@ class DeleteFlashCardConfirmationPopup(Popup):
 
     def on_confirm(self):
         gd = App.get_running_app()
+        file_front = "learning/flash_card_images/{t}_({fcid})_front.png".format(t=self.fc_title, fcid=self.fc_id)
+        file_back = "learning/flash_card_images/{t}_({fcid})_back.png".format(t=self.fc_title, fcid=self.fc_id)
+        try:
+            os.remove(file_back)
+        except:
+            pass
+        try:
+            os.remove(file_front)
+        except:
+            pass
         c.execute("""
                     DELETE
                     FROM `tbl_learning_flash_cards`
@@ -437,11 +449,62 @@ class BookNotePopup(Popup):
 
     def on_close(self):
         self.dismiss()
+
+
 class MiscFuns:
 
     def get_id(n):
         new_id = ''.join(random.SystemRandom().choice(string.digits) for _ in range(n))
         return new_id
+
+
+class MyWidget(Widget):
+
+    def export_to_png(self, filename, *args):
+        '''Saves an image of the widget and its children in png format at the
+        specified filename. Works by removing the widget canvas from its
+        parent, rendering to an :class:`~kivy.graphics.fbo.Fbo`, and calling
+        :meth:`~kivy.graphics.texture.Texture.save`.
+
+        .. note::
+
+            The image includes only this widget and its children. If you want
+            to include widgets elsewhere in the tree, you must call
+            :meth:`~Widget.export_to_png` from their common parent, or use
+            :meth:`~kivy.core.window.WindowBase.screenshot` to capture the
+            whole window.
+
+        .. note::
+
+            The image will be saved in png format, you should include the
+            extension in your filename.
+
+        .. versionadded:: 1.9.0
+        '''
+
+        if self.parent is not None:
+            canvas_parent_index = self.parent.canvas.indexof(self.canvas)
+            if canvas_parent_index > -1:
+                self.parent.canvas.remove(self.canvas)
+
+        fbo = Fbo(size=self.size, with_stencilbuffer=True)
+
+        with fbo:
+            ClearColor(0, 0, 0, 0)
+            ClearBuffers()
+            Scale(1, -1, 1)
+            Translate(-self.x, -self.y - self.height, 0)
+
+        fbo.add(self.canvas)
+        fbo.draw()
+        fbo.texture.save(filename, flipped=False)
+        fbo.remove(self.canvas)
+
+        if self.parent is not None and canvas_parent_index > -1:
+            self.parent.canvas.insert(canvas_parent_index, self.canvas)
+
+        return True
+
 class LoadDialog(FloatLayout):
     load = ObjectProperty(None)
     cancel = ObjectProperty(None)

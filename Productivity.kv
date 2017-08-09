@@ -3,6 +3,8 @@
 #: import lib lib
 #: include media/Books.kv
 #: include learning/FlashCards.kv
+#: include documentation/Journal.kv
+#: include coding/CodeSnippets.kv
 
 #ScreenManager:
 #    id: screen_manager
@@ -107,12 +109,13 @@
                 BoxLayout:
                     orientation: "vertical"
                     HomeScreenSectionButton:
-                        text: 'Programming'
+                        text: 'Coding'
                     GridLayout:
                         cols: 1
                         rows: 1
                         HomeScreenButton:
-                            text: 'Python'
+                            text: 'Code Snippets'
+                            on_release: lib.Navigation.page_nav(dest='code_snippets', orig='home', edit=False)
                 BoxLayout:
                     orientation: "vertical"
                     HomeScreenSectionButton:
@@ -157,12 +160,57 @@
                     rows: 2
                     HomeScreenButton:
                         text: 'Journal'
+                        on_release: lib.Navigation.page_nav(dest='journal', orig='home', edit=False)
                     HomeScreenButton:
                         text: 'Photos'
                     HomeScreenButton:
                         text: 'Contacts'
                     HomeScreenButton:
                         text: 'To-Do'
+
+
+<RstStyleButtons>:
+    BoxLayout:
+        size_hint_y: None
+        height: dp(60)
+        Button:
+            size_hint: None, None
+            size: dp(30), dp(30)
+            text: "B"
+            bold: True
+            on_press: lib.RstButtons.rst_font(text_input_1, "B")
+        Button:
+            size_hint: None, None
+            size: dp(30), dp(30)
+            text: "I"
+            italic: True
+            on_press: lib.RstButtons.rst_font(text_input_1, "I")
+        Button:
+            size_hint: None, None
+            size: dp(30), dp(30)
+            text: "U"
+            underline: True
+            on_press: lib.RstButtons.rst_font(text_input_1, "U")
+        Button:
+            size_hint: None, None
+            size: dp(30), dp(30)
+            text: "H1"
+            on_press: lib.RstButtons.rst_font(text_input_1, "H1")
+        Button:
+            size_hint: None, None
+            size: dp(30), dp(30)
+            text: "H2"
+            on_press: lib.RstButtons.rst_font(text_input_1, "H2")
+        Button:
+            size_hint: None, None
+            size: dp(30), dp(30)
+            text: "H2"
+            on_press: lib.RstButtons.rst_font(text_input_1, "H3")
+        Button:
+            size_hint: None, None
+            size: dp(30), dp(30)
+            text: "H2"
+            on_press: lib.RstButtons.rst_font(text_input_1, "H4")
 
 ####################################################################################
 ## Help Screen

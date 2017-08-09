@@ -1,9 +1,9 @@
 from kivy.app import App
 from kivy.uix.screenmanager import Screen
-from App.lib import Queries
-from App.lib import Navigation
-from App.lib import MiscFuns
-from App.lib import LoadDialog
+from lib import Queries
+from lib import Navigation
+from lib import MiscFuns
+from lib import LoadDialog
 from kivy.uix.popup import Popup
 from kivy.properties import DictProperty
 from kivy.properties import ListProperty, ObjectProperty

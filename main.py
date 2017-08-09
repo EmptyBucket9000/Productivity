@@ -1,8 +1,10 @@
 import kivy
 kivy.require('1.10.0')
 from kivy.config import Config
-Config.set('graphics', 'width', '1300')
-Config.set('graphics', 'height', '800')
+# Config.set('graphics', 'width', '1300')
+# Config.set('graphics', 'height', '800')
+Config.set('graphics', 'width', '1100')
+Config.set('graphics', 'height', '650')
 import sqlite3
 from kivy.app import App
 from kivy.uix.screenmanager import ScreenManager, Screen, NoTransition
@@ -10,8 +12,14 @@ from kivy.factory import Factory
 from kivy.properties import ListProperty, ObjectProperty
 from kivy.uix.dropdown import DropDown
 from kivy.uix.button import Button
-from App.learning import flash_cards as fc
-from App.media import books
+# from App.learning import flash_cards as fc
+# from App.media import books
+from learning import flash_cards as fc
+from media import books
+from documentation import journal
+from coding import code_snippets as cs
+from coding import lib as cl
+# import playground
 
 # Connect to the database
 conn = sqlite3.connect("./Assets/db_productivity.sqlite3")
@@ -95,6 +103,15 @@ class ProductivityApp(App):
         self.sm.add_widget(fc.NewFlashCardScreen(name='new_flash_card'))
         self.sm.add_widget(fc.NewFlashCardTagScreen(name='new_flash_card_tag'))
         self.sm.add_widget(fc.NewFlashCardDeckScreen(name='new_flash_card_deck'))
+
+        # self.sm.add_widget(playground.PlaySpace(name='play_space'))
+
+        self.sm.add_widget(journal.JournalScreen(name='journal'))
+
+        self.sm.add_widget(cs.CodeSnippetsScreen(name='code_snippets'))
+        self.sm.add_widget(cs.NewCodeSnippetScreen(name='new_code_snippet'))
+        self.sm.add_widget(cs.NewCodeSnippetTagScreen(name='new_code_snippet_tag'))
+        self.sm.add_widget(cl.NewCodingLanguageScreen(name='new_coding_language'))
 
         return self.sm
 
