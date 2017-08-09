@@ -1,0 +1,99 @@
+#: kivy 1.10.0
+#: import lib lib
+#: import main main
+#: import playground playground
+
+<SetColorBar@BoxLayout>:
+    size_hint_y: None
+    height: dp(50)
+    ToggleButton:
+        group: 'line_width'
+        text: "Thin"
+        on_release: playground.DrawSpace.set_line_width(line_width=1)
+    ToggleButton:
+        group: 'line_width'
+        text: "Normal"
+        on_release: playground.DrawSpace.set_line_width(line_width=1.5)
+    ToggleButton:
+        group: 'line_width'
+        text: "Thick"
+        on_release: playground.DrawSpace.set_line_width(line_width=2.25)
+    ToggleButton:
+        group: 'line_width'
+        text: "Very Thick"
+        on_release: playground.DrawSpace.set_line_width(line_width=3)
+    ToggleButton:
+        group: 'color'
+        state: 'down'
+        on_release: playground.DrawSpace.set_color(rgba=[0,0,0,1])
+        canvas:
+            Color:
+                rgba: 0, 0, 0, 1
+            Rectangle:
+                size: (self.width, self.height/2)
+                pos: self.pos
+    ToggleButton:
+        group: 'color'
+        on_release: playground.DrawSpace.set_color(rgba=[1,0,0,1])
+        canvas:
+            Color:
+                rgba: 1, 0, 0, 1
+            Rectangle:
+                size: (self.width, self.height/2)
+                pos: self.pos
+    ToggleButton:
+        group: 'color'
+        on_release: playground.DrawSpace.set_color(rgba=[0,1,0,1])
+        canvas:
+            Color:
+                rgba: 0, 1, 0, 1
+            Rectangle:
+                size: (self.width, self.height/2)
+                pos: self.pos
+    ToggleButton:
+        group: 'color'
+        on_release: playground.DrawSpace.set_color(rgba=[0,0,1,1])
+        canvas:
+            Color:
+                rgba: 0, 0, 1, 1
+            Rectangle:
+                size: (self.width, self.height/2)
+                pos: self.pos
+
+<PlaySpace>:
+    BoxLayout:
+        orientation: "vertical"
+        TopMenu:
+        BoxLayout:
+            padding: 10
+            orientation: "vertical"
+            SetColorBar:
+            BoxLayout:
+                BoxLayout:
+                    id: cid2
+                    size_hint: None, None
+                    size: dp(400), dp(400)
+                    canvas:
+                        Color:
+                            rgba: 1, 1, 1, 1
+                        Rectangle:
+                            size: self.size
+                            pos: self.pos
+                    DrawSpace:
+                        id: cid
+                        StencilView:
+                            size_hint: None, None
+                            size: self.parent.size
+                            canvas:
+                                Color:
+                                    rgba: 1,0,0,1
+                Button:
+                    size_hint: None, None
+                    size: 50, 50
+                    text: "Clear"
+                    on_release: cid.canvas.clear()
+                Button:
+                    size_hint: None, None
+                    size: 50, 50
+                    text: "Save"
+                    on_release: playground.DrawSpace.save(cid2,'learning/flash_card_images/fdsa.png')

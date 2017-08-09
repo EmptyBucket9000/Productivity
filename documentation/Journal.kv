@@ -1,0 +1,19 @@
+#: kivy 1.10.0
+#: import lib lib
+#: import main main
+
+<JournalScreen>:
+    BoxLayout:
+        orientation: "vertical"
+        TopMenu:
+        BoxLayout:
+            Button:
+                text: "New Entry"
+                on_release: lib.Navigation.page_nav(dest='new_journal_entry', orig='journal', fc_deck_id=root.fc_deck_id)
+
+<NewJournalEntryScreen>:
+    BoxLayout:
+        orientation: "vertical"
+        TopMenu:
+        BoxLayout:
+            FloatLayout:

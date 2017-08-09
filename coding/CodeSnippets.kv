@@ -1,0 +1,95 @@
+#: kivy 1.10.0
+#: import lib lib
+#: import main main
+
+<CodeSnippetsScreen>:
+    BoxLayout:
+        orientation: "vertical"
+        TopMenu:
+        BoxLayout:
+            Button:
+                text: "New Snippet"
+                on_release: lib.Navigation.page_nav(dest='new_code_snippet', orig='code_snippets')
+        BoxLayout:
+            Button:
+                text: "New Tag"
+                on_release: lib.Navigation.page_nav(dest='new_code_snippet_tag', orig='code_snippets')
+
+<NewCodeSnippetScreen>:
+    BoxLayout:
+        orientation: "vertical"
+        TopMenu:
+        BoxLayout:
+            FloatLayout:
+
+<NewCodeSnippetTagScreen>:
+    title: "New/Edit Code Snippet Tag"
+    BoxLayout:
+        orientation: "vertical"
+        BoxLayout:
+            size_hint_y: 0.1
+            padding: dp(10)
+            orientation: "vertical"
+            BoxLayout:
+                Label:
+                    size_hint_x: 0.3
+                    text: "Tag Name"
+                TextInput:
+                    padding_y: [self.height / 2.0 - (self.line_height / 2.0) * len(self._lines), 0]
+                    id: new_author_first
+                    on_text: root.data['cs_tag_name'] = self.text
+        BoxLayout:
+            TextInput:
+                id: new_code_tag_excerpt
+                multiline: True
+                text: root.data['cs_tag_excerpt'] if 'cs_tag_excerpt' in root.data else ""
+                on_text: root.data['cs_tag_excerpt'] = self.text
+            RstDocument:
+                text: new_code_tag_excerpt.text
+                show_errors: True
+        BoxLayout:
+            size_hint_y: 0.2
+            Button:
+                text: "Cancel"
+                on_release: lib.Navigation.page_nav(dest='prev_page', orig='new_code_tag', edit=False)
+            Button:
+                text: "Submit"
+                on_release: root.dispatch('on_submit', root.data)
+
+<NewCodingLanguageScreen>:
+    title: "New/Edit Flash Card Deck"
+    BoxLayout:
+        orientation: "vertical"
+        BoxLayout:
+            size_hint_y: 0.1
+            padding: dp(10)
+            orientation: "vertical"
+            BoxLayout:
+                Label:
+                    size_hint_x: 0.3
+                    text: "Language"
+                TextInput:
+                    text: root.data['coding_language_name'] if 'coding_language_name' in root.data else ""
+                    padding_y: [self.height / 2.0 - (self.line_height / 2.0) * len(self._lines), 0]
+#                    id: new_author_first
+                    on_text: root.data['coding_language_name'] = self.text
+        BoxLayout:
+            orientation: "vertical"
+            BoxLayout:
+                TextInput:
+                    id: text_input_1
+                    multiline: True
+                    text: root.data['coding_language_excerpt'] if 'coding_language_excerpt' in root.data else ""
+                    on_text: root.data['coding_language_excerpt'] = self.text
+                RstDocument:
+#                    id: rstdocument
+                    text: text_input_1.text
+                    show_errors: True
+        BoxLayout:
+            size_hint_y: 0.2
+            Button:
+                text: "Cancel"
+                on_release: lib.Navigation.page_nav(dest='prev_page', orig='new_flash_card_deck', edit=False)
+            Button:
+                text: "Submit"
+                on_release: root.dispatch('on_submit', root.data)
